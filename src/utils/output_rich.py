@@ -5,8 +5,6 @@ import shutil
 
 console = Console(width=200)
 
-print(f"Ширина консоли: {shutil.get_terminal_size().columns}")
-
 def log_error(message: str, details: str = "") -> None:
     """
     Вывод ошибки с панелью
@@ -33,3 +31,14 @@ def simple_log(message: str) -> None:
     """
 
     console.log(f"[green]{message}[/green]")
+
+def debug_log(message: str) -> None:
+    """
+    доггирование с rich, созданное для дебага
+    :param message:
+    :return:
+    """
+
+    console.log(f"[grey46][Debug] {message}[/grey46]")
+
+debug_log(f"Ширина консоли: {shutil.get_terminal_size().columns}")

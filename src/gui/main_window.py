@@ -1,7 +1,10 @@
-from PyQt6.QtWidgets import QWidget, QPushButton
+from pathlib import Path
+
+from PyQt6.QtWidgets import QWidget, QPushButton, QVBoxLayout, QHBoxLayout
+from PyQt6.QtCore import Qt, QPoint
 from PyQt6.QtGui import QResizeEvent
 
-from utils.functions_determining_state_user_window import handleResizeEvent, center_window
+from utils.functions_for_main_window_gui import center_window
 
 
 class mainWindow(QWidget):
@@ -12,14 +15,50 @@ class mainWindow(QWidget):
     def __init__(self):
         super().__init__()
 
+        self.drag_position: QPoint = QPoint()
+
+        self.setWindowFlag(Qt.WindowType.FramelessWindowHint)
+        self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+
         self.setMinimumSize(800, 600)
         self.setStyleSheet("background-color: white;")
 
-        #
-        self.cap_widget = QWidget(self)
-        self.cap_widget.setStyleSheet("background-color: orange;")
-        self.cap_widget.setFixedSize(self.width(),50)
-        self.cap_widget.move(0,0)
+        # Главный вертикальный layout
+        main_layout = QVBoxLayout()
+        main_layout.setContentsMargins(0, 0, 0, 0)
+        main_layout.setSpacing(0)
+
+        # Шапка
+        self.cap_widget = QWidget()
+        self.cap_widget.setStyleSheet("""
+                    background-color: orange;
+                    border-bottom: 2px solid #e67e22;
+                """)
+        self.cap_widget.setFixedHeight(55)
+
+        # Основной контент
+        self.content_widget = QWidget()
+        self.content_widget.setStyleSheet("background-color: gray;")
+
+        main_layout.addWidget(self.cap_widget)
+        main_layout.addWidget(self.content_widget)
+
+        self.setLayout(main_layout)
+
+        # кнопка закрытия основного окна приложения.
+        button_close = QPushButton(self)
+        button_close.setFixedSize(45, 45)
+        button_close.move(750, 5)
+        button_close.setCursor(Qt.CursorShape.PointingHandCursor)
+        close_button_path = Path("resources/images/main_window/icons/close_icon.png")
+        button_close.setStyleSheet(f"""
+                    background-image:url({close_button_path.as_posix()});
+                    background-color: transparent;
+                    border: none;
+                    background-repeat: no-repeat;
+                    background-position: center;
+                    """)
+        button_close.clicked.connect(self.close)
 
         center_window(self)
 
@@ -33,4 +72,23 @@ class mainWindow(QWidget):
         new_width = new_size.width()
         new_height = new_size.height()
 
-        self.cap_widget.setFixedSize(new_width, 50)
+    def mousePressEvent(self, event) -> None:
+        """
+        функция, отслеживающая точку, где пользователь зажал ЛКМ
+        """
+
+        if event.button() == Qt.MouseButton.LeftButton:
+            self.drag_position = event.globalPosition().toPoint()
+            event.accept()
+
+    def mouseMoveEvent(self, event) -> None:
+        """
+        функция для вычисления смещения по изменения позиции зажатой ЛКМ.
+         Перемещает окно при движении мыши с зажатой ЛКМ.
+        """
+
+        if event.buttons() == Qt.MouseButton.LeftButton:
+            delta = event.globalPosition().toPoint() - self.drag_position
+            self.move(self.pos() + delta)
+            self.drag_position = event.globalPosition().toPoint()
+            event.accept()

@@ -14,20 +14,17 @@ class MyLoadingWindow(QWidget):
     Класс загрузочного окна на PyQt6 с гиф-анимацией загрузки
     """
 
-    closed = pyqtSignal() # как раз кастомный сигнал для закрытия окна
+    closed = pyqtSignal()
 
-    def __init__(self) -> None: # конструктор класса
+    def __init__(self) -> None:
         """
         Инициализация загрузочного окна с гиф-анимацией.
         """
 
-        super().__init__() # метод вызова конструктора родительского класса
+        super().__init__()
         self.drag_position: QPoint = QPoint()
-        # Это создан атрибут для хранения позиции мыши, объект класса qpoint.
         self.setWindowFlag(Qt.WindowType.FramelessWindowHint)
-        #  удаление стандартной рамки окна
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
-        # включение прозрачного фона для окна, скрывается рамка окна
 
         simple_log("[I] показ загрузочного окна.")
 
@@ -69,12 +66,12 @@ class MyLoadingWindow(QWidget):
 
         simple_log("[I] показ гиф анимации процесса загрузки")
 
-        path_gif_loading = Path('resources/gifs/loading_animation.gif')
+        path_gif_loading = Path('resources/for_start_window/gifs/loading_animation.gif')
 
         gif_loading = QMovie(path_gif_loading.as_posix())
         movie_widget = QLabel(self)
         movie_widget.setFixedSize(64,66)
-        movie_widget.setMovie(gif_loading) # устанавливаю гиф изображение на qlabel
+        movie_widget.setMovie(gif_loading)
         gif_loading.start() # старт анимации.
         movie_widget.move(520, 320)
 
@@ -107,26 +104,26 @@ class MyLoadingWindow(QWidget):
             self.lb_hi_prog.setGeometry(290, 15, 300, 50)
             self.lb_hi_prog.setText("Доброе утро!")
             self.lb_hi_prog.setStyleSheet("color: rgb(195, 206, 53); font-size: 28px; font-weight: bold;")
-            path_bg_loading = Path('resources/images/for_start_window/birds_in_the_park.jpg')
+            path_bg_loading = Path('resources/images/for_start_window/images/birds_in_the_park.jpg')
 
         elif 11 <= current_hour < 17:
             self.lb_hi_prog.setGeometry(150, 15, 300, 50)
             self.lb_hi_prog.setText("Добрый день")
             self.lb_hi_prog.setStyleSheet("color: rgb(54, 201, 255); font-size: 28px; font-weight: bold;")
-            path_bg_loading = Path('resources/images/for_start_window/plane_in_the_sky.jpg')
+            path_bg_loading = Path('resources/images/for_start_window/images/plane_in_the_sky.jpg')
 
         elif 17 <= current_hour < 21:
             self.block_shadow.setStyleSheet("background-color: rgba(0,0,0,0.5); border-radius: 10px;")
             self.lb_hi_prog.setGeometry(15, 15, 300, 50)
             self.lb_hi_prog.setText("Добрый вечер")
             self.lb_hi_prog.setStyleSheet("color: white; font-size: 32px; font-weight: bold;")
-            path_bg_loading = Path('resources/images/for_start_window/bird_feeder_in_the_park.jpg')
+            path_bg_loading = Path('resources/images/for_start_window/images/bird_feeder_in_the_park.jpg')
 
         else:
             self.lb_hi_prog.setGeometry(150, 25, 300, 50)
             self.lb_hi_prog.setText("Доброй ночи")
             self.lb_hi_prog.setStyleSheet("color: white; font-size: 26px; font-weight: bold;")
-            path_bg_loading = Path('resources/images/for_start_window/porshe_at_night.jpg')
+            path_bg_loading = Path('resources/images/for_start_window/images/porshe_at_night.jpg')
 
         self.loading_window.setStyleSheet(
             f"background-image: url({path_bg_loading.as_posix()}); border-radius: 10px;")
