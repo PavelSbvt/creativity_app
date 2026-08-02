@@ -12,22 +12,25 @@ class mainWindow(QWidget):
     def __init__(self):
         super().__init__()
 
-        self.resize(200, 200)
+        self.setMinimumSize(800, 600)
+        self.setStyleSheet("background-color: white;")
 
-        # фоновый блок для главного окна
-        self.bg_widget = QWidget(self)
-        self.bg_widget.setStyleSheet("background-color: white; border-radius: 10px;")
-        self.bg_widget.setFixedSize(100,100)
-        self.bg_widget.move(0,0)
+        #
+        self.cap_widget = QWidget(self)
+        self.cap_widget.setStyleSheet("background-color: orange;")
+        self.cap_widget.setFixedSize(self.width(),50)
+        self.cap_widget.move(0,0)
 
         center_window(self)
 
     def resizeEvent(self, event: QResizeEvent):
         """
-        Вызывается каждый раз, когда окно изменяет размер
+        Обработчик изменения размера окна
         """
-        handleResizeEvent(self, event)
 
+        new_size = event.size()
 
+        new_width = new_size.width()
+        new_height = new_size.height()
 
-
+        self.cap_widget.setFixedSize(new_width, 50)

@@ -31,6 +31,7 @@ def main() -> None:
         simple_log("[I] Показ главного окна")
         main_win.show()
         loading_win.hide()
+        simple_log("[I] загрузочное окно скрыто")
 
     loading_win.closed.connect(on_loading_closed)
     sys.exit(app.exec())
