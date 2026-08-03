@@ -1,3 +1,4 @@
+from utils.output_rich import simple_log, debug_log
 
 
 def center_window(self) -> None:

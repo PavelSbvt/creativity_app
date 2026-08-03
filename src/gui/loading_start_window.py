@@ -7,6 +7,8 @@ from PyQt6.QtGui import QMovie
 from PyQt6.QtWidgets import QLabel, QWidget, QGraphicsOpacityEffect
 
 from utils.output_rich import simple_log
+from gui.animations.animations_for_windows import (animationAppearanceWindow,
+animationDisappearanceWindow, animationDindisappearanceAndClosing)
 
 
 class MyLoadingWindow(QWidget):
@@ -22,25 +24,18 @@ class MyLoadingWindow(QWidget):
         """
 
         super().__init__()
+
         self.drag_position: QPoint = QPoint()
         self.setWindowFlag(Qt.WindowType.FramelessWindowHint)
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+
+        self.close_window_animation = None
 
         simple_log("[I] показ загрузочного окна.")
 
         self.loading_window = QWidget(self)
         self.loading_window.setFixedSize(600,400)
         self.loading_window.move(0,0)
-
-        self.opacity_effect = QGraphicsOpacityEffect(self)
-        self.setGraphicsEffect(self.opacity_effect)
-
-        self.animation = QPropertyAnimation(self.opacity_effect, b"opacity")
-        self.animation.setDuration(700)
-        self.animation.setStartValue(0.0)
-        self.animation.setEndValue(1.0)
-
-        self.animation.setEasingCurve(QEasingCurve.Type.OutCubic)
 
         simple_log("[I] вывод сообщения о сообщения о загрузке ('Приложение загружается...')")
 
@@ -72,21 +67,25 @@ class MyLoadingWindow(QWidget):
         movie_widget = QLabel(self)
         movie_widget.setFixedSize(64,66)
         movie_widget.setMovie(gif_loading)
-        gif_loading.start() # старт анимации.
+        gif_loading.start()
         movie_widget.move(520, 320)
 
         self.background_window_by_time_of_day()
 
+        animationAppearanceWindow(self, duration = 700)
+
         simple_log("[I] запуск таймера на 3 секунды, после чего окна закроется")
 
-        self.timer = QTimer(self) # создаю объект класса qtimer как атрибут класса
-        # загрузочного окна, родитель - self, то есть само загрузочное окно
-        self.timer.timeout.connect(self.start_fade_out)
-        # подключение сигнала таймера к функции закрытия окна.
+        self.timer = QTimer(self)
+        self.timer.timeout.connect(self.start_closing)
         self.timer.start(3000)
-        # таймер сработает через 3 секунды. окно закроется через 3 секунды
 
-        self.animation.start()
+    def start_closing(self) -> None:
+        """
+        Запускает анимацию исчезания и закрытия окна
+        """
+        simple_log("[I] запуск анимации исчезания окна")
+        animationDindisappearanceAndClosing(self, duration=1000)
 
     def background_window_by_time_of_day(self) -> None:
         """
@@ -127,32 +126,6 @@ class MyLoadingWindow(QWidget):
 
         self.loading_window.setStyleSheet(
             f"background-image: url({path_bg_loading.as_posix()}); border-radius: 10px;")
-
-    def start_fade_out(self) -> None:
-        """
-        Запускает анимацию исчезания окна
-        """
-
-        self.close_animation = QPropertyAnimation(self.opacity_effect, b"opacity")
-        self.close_animation.setDuration(450)
-        self.close_animation.setStartValue(1.0)
-        self.close_animation.setEndValue(0.0)
-        self.close_animation.setEasingCurve(QEasingCurve.Type.InCubic)
-        self.close_animation.finished.connect(self.closeWindow)
-        self.close_animation.start()
-
-    def closeWindow(self) -> None:
-        """
-        закрытие окна
-        """
-
-        self.close_animation.deleteLater()
-        self.close_animation = None
-
-        self.close()
-        simple_log("[I] закрытие загрузочного окна")
-        self.closed.emit()
-        self.deleteLater()
 
     def mousePressEvent(self, event) -> None:
         """
