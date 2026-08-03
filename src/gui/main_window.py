@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from PyQt6.QtWidgets import QWidget, QPushButton, QVBoxLayout, QHBoxLayout
+from PyQt6.QtWidgets import QWidget, QPushButton, QVBoxLayout, QHBoxLayout, QScrollArea
 from PyQt6.QtCore import Qt, QPoint
 from PyQt6.QtGui import QResizeEvent
 
@@ -43,6 +43,59 @@ class mainWindow(QWidget):
         main_layout.addWidget(self.cap_widget)
         main_layout.addWidget(self.content_widget)
 
+        scroll_area = QScrollArea()
+        scroll_area.setWidgetResizable(True)
+        scroll_area.setStyleSheet("""
+                    QScrollArea {
+                        background-color: #f5f5f5;
+                        border: none;
+                    }
+                    QScrollBar:vertical {
+                        width: 8px;
+                        background: #e0e0e0;
+                        border-radius: 4px;
+                    }
+                    QScrollBar::handle:vertical {
+                        background: #b0b0b0;
+                        border-radius: 4px;
+                    }
+                    QScrollBar::handle:vertical:hover {
+                        background: #909090;
+                    }
+                """)
+
+        scroll_widget = QWidget()
+        scroll_widget.setStyleSheet("background-color: #f5f5f5;")
+
+        scroll_layout = QVBoxLayout()
+        scroll_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+        scroll_layout.setSpacing(10)
+        scroll_layout.setContentsMargins(20, 20, 20, 20)
+
+        for i in range(20):
+            widget = QWidget()
+            widget.setStyleSheet(f"""
+                        background-color: {'#FF6B6B' if i % 2 == 0 else '#4ECDC4'};
+                        border-radius: 8px;
+                    """)
+            widget.setFixedHeight(60)
+
+            from PyQt6.QtWidgets import QLabel
+            label = QLabel(f"Элемент {i + 1}")
+            label.setStyleSheet("color: white; font-size: 16px; font-weight: bold;")
+            label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+            widget_layout = QVBoxLayout()
+            widget_layout.addWidget(label)
+            widget.setLayout(widget_layout)
+
+            scroll_layout.addWidget(widget)
+
+        scroll_widget.setLayout(scroll_layout)
+        scroll_area.setWidget(scroll_widget)
+
+        main_layout.addWidget(scroll_area)
+
         self.setLayout(main_layout)
 
         # кнопка закрытия основного окна приложения.
@@ -52,12 +105,12 @@ class mainWindow(QWidget):
         button_close.setCursor(Qt.CursorShape.PointingHandCursor)
         close_button_path = Path("resources/images/main_window/icons/close_icon.png")
         button_close.setStyleSheet(f"""
-                    background-image:url({close_button_path.as_posix()});
-                    background-color: transparent;
-                    border: none;
-                    background-repeat: no-repeat;
-                    background-position: center;
-                    """)
+                            background-image:url({close_button_path.as_posix()});
+                            background-color: transparent;
+                            border: none;
+                            background-repeat: no-repeat;
+                            background-position: center;
+                            """)
         button_close.clicked.connect(self.close)
 
         center_window(self)
