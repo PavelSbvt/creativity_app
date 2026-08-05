@@ -41,4 +41,4 @@ def debug_log(message: str) -> None:
 
     console.log(f"[grey46][Debug] {message}[/grey46]")
 
-debug_log(f"Ширина консоли: {shutil.get_terminal_size().columns}")
+# debug_log(f"Ширина консоли: {shutil.get_terminal_size().columns}")
