@@ -1,3 +1,8 @@
+from pathlib import Path
+
+from PyQt6.QtWidgets import QWidget, QPushButton
+from PyQt6.QtCore import Qt, QPoint
+
 from utils.output_rich import simple_log, debug_log
 
 
@@ -15,7 +20,18 @@ class Note():
 
         self.id: int = len(notes) + 1
 
-        simple_log(f"Создана запись №{self.id}: {self.title[:20]}, {self.content[:20]}")
+        if len(self.title) > 0 and len(self.content) > 0:
+            if len(self.title) > 30 and len(self.content) > 30:
+                simple_log(f"[I] Создана запись №{self.id}: {self.title[:30]}..., {self.content[:30]}...")
+            elif len(self.title) > 30 and len(self.content) <= 30:
+                simple_log(f"[I] Создана запись №{self.id}: {self.title[:30]}..., {self.content[:30]}")
+            elif len(self.title) <= 30 and len(self.content) > 30:
+                simple_log(f"[I] Создана запись №{self.id}: {self.title[:30]}, {self.content[:30]}...")
+            else:
+                simple_log(f"[I] Создана запись №{self.id}: {self.title[:30]}, {self.content[:30]}")
+        else:
+            simple_log(f"[I] Создана запись №{self.id}. Без заголовка и текста.")
+
 
         notes.append(self)
 
@@ -35,8 +51,48 @@ def showNotes():
     else:
         simple_log("Список записей пока пуст :(")
 
-showNotes()
+class createNewNoteWindow(QWidget):
+    def __init__(self):
+        super().__init__()
+        self.drag_position: QPoint = QPoint()
 
-createNote()
+        self.setWindowFlag(Qt.WindowType.FramelessWindowHint)
+        # self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
 
-showNotes()
+        self.setFixedSize(800, 600)
+        self.setStyleSheet("background-color: gray;")
+
+        self.button_close = QPushButton(self)
+        self.button_close.setFixedSize(45, 45)
+        self.button_close.move(750, 5)
+        self.button_close.setCursor(Qt.CursorShape.PointingHandCursor)
+        close_button_path = Path("resources/images/main_window/icons/close_icon.png")
+        self.button_close.setStyleSheet(f"""
+                                   background-image:url({close_button_path.as_posix()});
+                                   background-color: transparent;
+                                   border: none;
+                                   background-repeat: no-repeat;
+                                   background-position: center;
+                                   """)
+        self.button_close.clicked.connect(self.close)
+
+    def mousePressEvent(self, event) -> None:
+        """
+        функция, отслеживающая точку, где пользователь зажал ЛКМ
+        """
+
+        if event.button() == Qt.MouseButton.LeftButton:
+            self.drag_position = event.globalPosition().toPoint()
+            event.accept()
+
+    def mouseMoveEvent(self, event) -> None:
+        """
+        функция для вычисления смещения по изменения позиции зажатой ЛКМ.
+         Перемещает окно при движении мыши с зажатой ЛКМ.
+        """
+
+        if event.buttons() == Qt.MouseButton.LeftButton:
+            delta = event.globalPosition().toPoint() - self.drag_position
+            self.move(self.pos() + delta)
+            self.drag_position = event.globalPosition().toPoint()
+            event.accept()

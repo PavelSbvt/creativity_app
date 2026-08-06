@@ -1,10 +1,13 @@
 from pathlib import Path
 
-from PyQt6.QtWidgets import QWidget, QPushButton, QVBoxLayout, QHBoxLayout, QScrollArea
+from PyQt6.QtWidgets import (QWidget, QPushButton, QVBoxLayout, QHBoxLayout, QScrollArea,
+QLabel)
 from PyQt6.QtCore import Qt, QPoint
 from PyQt6.QtGui import QResizeEvent
 
 from utils.functions_for_main_window_gui import center_window
+from core.users_notes import notes, Note, createNote, createNewNoteWindow
+from utils.output_rich import simple_log
 
 
 class mainWindow(QWidget):
@@ -72,24 +75,11 @@ class mainWindow(QWidget):
         scroll_layout.setSpacing(10)
         scroll_layout.setContentsMargins(20, 20, 20, 20)
 
-        for i in range(20):
-            widget = QWidget()
-            widget.setStyleSheet(f"""
-                        background-color: {'#FF6B6B' if i % 2 == 0 else '#4ECDC4'};
-                        border-radius: 8px;
-                    """)
-            widget.setFixedHeight(60)
+        note_1 = Note("title", "elephant")
+        note_2 = Note("raw", "raw - format of photoes")
+        note_3 = Note("", "")
 
-            from PyQt6.QtWidgets import QLabel
-            label = QLabel(f"Элемент {i + 1}")
-            label.setStyleSheet("color: white; font-size: 16px; font-weight: bold;")
-            label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-
-            widget_layout = QVBoxLayout()
-            widget_layout.addWidget(label)
-            widget.setLayout(widget_layout)
-
-            scroll_layout.addWidget(widget)
+        self.show_notes_in_gui(scroll_layout)
 
         scroll_widget.setLayout(scroll_layout)
         scroll_area.setWidget(scroll_widget)
@@ -99,21 +89,76 @@ class mainWindow(QWidget):
         self.setLayout(main_layout)
 
         # кнопка закрытия основного окна приложения.
-        button_close = QPushButton(self)
-        button_close.setFixedSize(45, 45)
-        button_close.move(750, 5)
-        button_close.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.button_close = QPushButton(self)
+        self.button_close.setFixedSize(45, 45)
+        self.button_close.move(750, 5)
+        self.button_close.setCursor(Qt.CursorShape.PointingHandCursor)
         close_button_path = Path("resources/images/main_window/icons/close_icon.png")
-        button_close.setStyleSheet(f"""
+        self.button_close.setStyleSheet(f"""
                             background-image:url({close_button_path.as_posix()});
                             background-color: transparent;
                             border: none;
                             background-repeat: no-repeat;
                             background-position: center;
                             """)
-        button_close.clicked.connect(self.close)
+        self.button_close.clicked.connect(self.close_func)
+
+        # Кнопка создания записи
+        self.button_create_note = QPushButton(self)
+        self.button_create_note.setFixedSize(55,55)
+        self.button_create_note.move(730,530)
+        self.button_create_note.setCursor(Qt.CursorShape.PointingHandCursor)
+        button_create_path = Path("resources/images/main_window/icons/button_create_new_note.png")
+        self.button_create_note.setStyleSheet(f"""
+                            background-image:url({button_create_path.as_posix()});
+                            background-color: transparent;
+                            border: none;
+                            background-repeat: no-repeat;
+                            background-position: center;
+                            """)
+        self.button_create_note.clicked.connect(self.create_new_note)
 
         center_window(self)
+
+    def close_func(self):
+        simple_log("[I][Exit] Нажата кнопка закрытия приложения. Выход из приложения.")
+        self.close()
+
+    def create_new_note(self):
+        simple_log("[I] Нажата кнопка создания записи")
+        self.note_window = createNewNoteWindow()
+        self.note_window.setWindowModality(Qt.WindowModality.ApplicationModal)
+        self.note_window.show()
+
+    def show_notes_in_gui(self, scroll_layout):
+        for note in notes:
+
+            widget = QWidget()
+            widget.setStyleSheet(f"""
+                                    background-color: {'#FF6B6B' if note.id % 2 == 0 else '#4ECDC4'};
+                                    border-radius: 8px;
+                                """)
+            widget.setFixedHeight(120)
+
+            label_number_note = QLabel(f"Элемент {note.id}")
+            label_number_note.setStyleSheet("color: white; font-size: 16px; font-weight: bold;")
+            label_number_note.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+            label_title_note = QLabel(note.title)
+            label_title_note.setStyleSheet("color: white; font-size: 16px; font-weight: bold;")
+            label_title_note.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+            label_content_note = QLabel(note.content)
+            label_content_note.setStyleSheet("color: white; font-size: 16px; font-weight: bold;")
+            label_content_note.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+            widget_layout = QVBoxLayout()
+            widget_layout.addWidget(label_number_note)
+            widget_layout.addWidget(label_title_note)
+            widget_layout.addWidget(label_content_note)
+            widget.setLayout(widget_layout)
+
+            scroll_layout.addWidget(widget)
 
     def resizeEvent(self, event: QResizeEvent):
         """
