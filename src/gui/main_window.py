@@ -7,7 +7,7 @@ from PyQt6.QtGui import QResizeEvent
 
 from utils.functions_for_main_window_gui import center_window
 from core.users_notes import notes, Note, createNote, createNewNoteWindow
-from utils.output_rich import simple_log
+from utils.output_rich import simple_log, exit_log, enter_log
 
 
 class mainWindow(QWidget):
@@ -121,11 +121,11 @@ class mainWindow(QWidget):
         center_window(self)
 
     def close_func(self):
-        simple_log("[I][Exit] Нажата кнопка закрытия приложения. Выход из приложения.")
+        exit_log("[Exit] Нажата кнопка закрытия приложения. Выход из приложения.")
         self.close()
 
     def create_new_note(self):
-        simple_log("[I] Нажата кнопка создания записи")
+        enter_log("[Enter] Нажата кнопка создания записи. Открытие окна создания записи.")
         self.note_window = createNewNoteWindow()
         self.note_window.setWindowModality(Qt.WindowModality.ApplicationModal)
         self.note_window.show()

@@ -6,7 +6,7 @@ from PyQt6.QtGui import QIcon
 
 from gui.loading_start_window import MyLoadingWindow
 from gui.main_window import mainWindow
-from utils.output_rich import simple_log
+from utils.output_rich import simple_log, enter_log, exit_log
 
 
 def main() -> None:
@@ -28,10 +28,10 @@ def main() -> None:
         Функция, которая показывает основное окно,
          а загрузочное окно скрывает при показе основного окна программы.
         """
-        simple_log("[I] Показ главного окна")
+        enter_log("[Enter] Показ главного окна")
         main_win.show()
         loading_win.hide()
-        simple_log("[I] загрузочное окно скрыто")
+        exit_log("[Exit] загрузочное окно скрыто")
 
     loading_win.closed.connect(on_loading_closed)
     sys.exit(app.exec())

@@ -6,7 +6,7 @@ from PyQt6.QtCore import (QPoint, QTimer, pyqtSignal, Qt, QPropertyAnimation,
 from PyQt6.QtGui import QMovie
 from PyQt6.QtWidgets import QLabel, QWidget, QGraphicsOpacityEffect
 
-from utils.output_rich import simple_log
+from utils.output_rich import simple_log, enter_log
 from gui.animations.animations_for_windows import (animationAppearanceWindow,
 animationDisappearanceWindow, animationDindisappearanceAndClosing)
 
@@ -31,7 +31,7 @@ class MyLoadingWindow(QWidget):
 
         self.close_window_animation = None
 
-        simple_log("[I] показ загрузочного окна.")
+        enter_log("[Enter] показ загрузочного окна.")
 
         self.loading_window = QWidget(self)
         self.loading_window.setFixedSize(600,400)

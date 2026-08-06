@@ -1,9 +1,9 @@
 from pathlib import Path
 
-from PyQt6.QtWidgets import QWidget, QPushButton
+from PyQt6.QtWidgets import QWidget, QPushButton, QLabel, QTextEdit, QLineEdit
 from PyQt6.QtCore import Qt, QPoint
 
-from utils.output_rich import simple_log, debug_log
+from utils.output_rich import simple_log, debug_log, success_log, exit_log
 
 
 notes = []
@@ -22,15 +22,15 @@ class Note():
 
         if len(self.title) > 0 and len(self.content) > 0:
             if len(self.title) > 30 and len(self.content) > 30:
-                simple_log(f"[I] Создана запись №{self.id}: {self.title[:30]}..., {self.content[:30]}...")
+                success_log(f"[I] Создана запись №{self.id}: {self.title[:30]}..., {self.content[:30]}...")
             elif len(self.title) > 30 and len(self.content) <= 30:
-                simple_log(f"[I] Создана запись №{self.id}: {self.title[:30]}..., {self.content[:30]}")
+                success_log(f"[I] Создана запись №{self.id}: {self.title[:30]}..., {self.content[:30]}")
             elif len(self.title) <= 30 and len(self.content) > 30:
-                simple_log(f"[I] Создана запись №{self.id}: {self.title[:30]}, {self.content[:30]}...")
+                success_log(f"[I] Создана запись №{self.id}: {self.title[:30]}, {self.content[:30]}...")
             else:
-                simple_log(f"[I] Создана запись №{self.id}: {self.title[:30]}, {self.content[:30]}")
+                success_log(f"[I] Создана запись №{self.id}: {self.title[:30]}, {self.content[:30]}")
         else:
-            simple_log(f"[I] Создана запись №{self.id}. Без заголовка и текста.")
+            success_log(f"[I] Создана запись №{self.id}. Без заголовка и текста.")
 
 
         notes.append(self)
@@ -57,10 +57,9 @@ class createNewNoteWindow(QWidget):
         self.drag_position: QPoint = QPoint()
 
         self.setWindowFlag(Qt.WindowType.FramelessWindowHint)
-        # self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
 
         self.setFixedSize(800, 600)
-        self.setStyleSheet("background-color: gray;")
+        self.setStyleSheet("background-color: gray; border-radius: 20px;")
 
         self.button_close = QPushButton(self)
         self.button_close.setFixedSize(45, 45)
@@ -74,7 +73,21 @@ class createNewNoteWindow(QWidget):
                                    background-repeat: no-repeat;
                                    background-position: center;
                                    """)
-        self.button_close.clicked.connect(self.close)
+        self.button_close.clicked.connect(self.closeCreateNoteWindow)
+
+        title_label = QLabel("Заголовок:", self)
+        self.title_input = QLineEdit(self)
+        self.title_input.setPlaceholderText("Введите заголовок...")
+
+        content_label = QLabel("Содержание:", self)
+        self.content_input = QTextEdit(self)
+        self.content_input.setPlaceholderText("Введите текст заметки...")
+
+        save_button = QPushButton("Сохранить", self)
+
+    def closeCreateNoteWindow(self):
+        exit_log("[I][Exit] Выход из окна создания записи.")
+        self.close()
 
     def mousePressEvent(self, event) -> None:
         """
