@@ -167,8 +167,8 @@ class mainWindow(QWidget):
 
         new_size = event.size()
 
-        new_width = new_size.width()
-        new_height = new_size.height()
+        # new_width = new_size.width()
+        # new_height = new_size.height()
 
     def mousePressEvent(self, event) -> None:
         """
