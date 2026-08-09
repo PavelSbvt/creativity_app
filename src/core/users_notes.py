@@ -4,8 +4,10 @@ from PyQt6.QtWidgets import (QWidget, QPushButton, QLabel, QTextEdit, QLineEdit,
                              QVBoxLayout)
 from PyQt6.QtCore import Qt, QPoint
 
-from utils.output_rich import simple_log, debug_log, success_log, exit_log
+from utils.output_rich import simple_log, debug_log, success_log, exit_log, warning_log
 
+
+updateFlag = False
 
 notes = []
 
@@ -149,24 +151,24 @@ class createNewNoteWindow(QWidget):
 
         self.button_create_note.clicked.connect(self.createNoteOnPressButton)
 
-
     def createNoteOnPressButton(self):
         title = self.title_input.text().strip()
         content = self.content_input.text().strip()
 
         if not title and not content:
-            simple_log("[W] Попытка создать пустую заметку")
+            warning_log("[W] Попытка создать пустую заметку")
             return
 
         note = Note(title, content)
         simple_log(f"[I] Создана запись №{note.id} по кнопке")
 
-        # Очищаем поля после создания
         self.title_input.clear()
         self.content_input.clear()
 
-        # Может, закрыть окно?
-        # self.close()
+        global updateFlag
+        updateFlag = True
+
+        self.close()
 
     def closeCreateNoteWindow(self):
         exit_log("[I][Exit] Выход из окна создания записи.")

@@ -2,12 +2,12 @@ from pathlib import Path
 
 from PyQt6.QtWidgets import (QWidget, QPushButton, QVBoxLayout, QHBoxLayout, QScrollArea,
 QLabel)
-from PyQt6.QtCore import Qt, QPoint
+from PyQt6.QtCore import Qt, QPoint, QEvent
 from PyQt6.QtGui import QResizeEvent
 
 from utils.functions_for_main_window_gui import center_window
-from core.users_notes import notes, Note, createNote, createNewNoteWindow
-from utils.output_rich import simple_log, exit_log, enter_log
+from core.users_notes import notes, Note, createNote, createNewNoteWindow, updateFlag
+from utils.output_rich import simple_log, exit_log, enter_log, debug_log
 
 
 class mainWindow(QWidget):
@@ -70,18 +70,18 @@ class mainWindow(QWidget):
         scroll_widget = QWidget()
         scroll_widget.setStyleSheet("background-color: #f5f5f5;")
 
-        scroll_layout = QVBoxLayout()
-        scroll_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
-        scroll_layout.setSpacing(10)
-        scroll_layout.setContentsMargins(20, 20, 20, 20)
+        self.scroll_layout = QVBoxLayout()
+        self.scroll_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+        self.scroll_layout.setSpacing(10)
+        self.scroll_layout.setContentsMargins(20, 20, 20, 20)
 
         note_1 = Note("title", "elephant")
         note_2 = Note("raw", "raw - format of photoes")
         note_3 = Note("", "")
 
-        self.show_notes_in_gui(scroll_layout)
+        self.show_notes_in_gui(self.scroll_layout)
 
-        scroll_widget.setLayout(scroll_layout)
+        scroll_widget.setLayout(self.scroll_layout)
         scroll_area.setWidget(scroll_widget)
 
         main_layout.addWidget(scroll_area)
@@ -120,14 +120,72 @@ class mainWindow(QWidget):
 
         center_window(self)
 
+        self.count_notes = len(notes)
+
+        self.button_update = QPushButton(self)
+        self.button_update.setStyleSheet("""
+                    QPushButton {
+                        background-color: white;
+                        color: black;
+                        font: bold;
+                        font-size: 16px;
+                        border: none;
+                        border-radius: 5px;
+                    }
+                    QPushButton:hover {
+                        background-color: gray;
+                    }
+                    QPushButton:pressed {
+                        background-color: black;
+                    }
+        """)
+        self.button_update.setFixedSize(35,35)
+        self.button_update.move(5,5)
+
+        self.button_update.clicked.connect(self.refresh_notes_display)
+
+    def changeEvent(self, event):
+        """Отслеживаем изменение состояния окна"""
+        if event.type() == QEvent.Type.ActivationChange:
+            if self.isActiveWindow():
+                global updateFlag
+                if updateFlag:
+                    debug_log("[I] Обнаружено обновление заметок, обновляем GUI")
+                    self.refresh_notes_display()
+                    updateFlag = False
+        super().changeEvent(event)
+
+    def showEvent(self, event):
+        """Срабатывает при показе окна"""
+        super().showEvent(event)
+
+        global updateFlag
+
+        if updateFlag:
+            debug_log("[I] Обнаружено обновление заметок, обновляем GUI")
+            self.refresh_notes_display()
+            updateFlag = False
+
+    def refresh_notes_display(self):
+        """Полностью перерисовывает список заметок"""
+        while self.scroll_layout.count():
+            item = self.scroll_layout.takeAt(0)
+            if item.widget():
+                item.widget().deleteLater()
+
+        self.show_notes_in_gui(self.scroll_layout)
+        debug_log("[I] GUI обновлен")
+
     def close_func(self):
         exit_log("[Exit] Нажата кнопка закрытия приложения. Выход из приложения.")
         self.close()
 
     def create_new_note(self):
         enter_log("[Enter] Нажата кнопка создания записи. Открытие окна создания записи.")
+
         self.note_window = createNewNoteWindow()
         self.note_window.setWindowModality(Qt.WindowModality.ApplicationModal)
+
         self.note_window.show()
 
     def show_notes_in_gui(self, scroll_layout):
