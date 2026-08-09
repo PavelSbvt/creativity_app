@@ -3,7 +3,7 @@ from pathlib import Path
 from PyQt6.QtWidgets import (QWidget, QPushButton, QVBoxLayout, QHBoxLayout, QScrollArea,
 QLabel)
 from PyQt6.QtCore import Qt, QPoint, QEvent
-from PyQt6.QtGui import QResizeEvent
+from PyQt6.QtGui import QResizeEvent, QPixmap
 
 from utils.functions_for_main_window_gui import center_window
 from core.users_notes import notes, Note, createNote, createNewNoteWindow, updateFlag
@@ -75,6 +75,7 @@ class mainWindow(QWidget):
         self.scroll_layout.setSpacing(10)
         self.scroll_layout.setContentsMargins(20, 20, 20, 20)
 
+        # Создал объекты вручную (для теста)
         note_1 = Note("title", "elephant")
         note_2 = Note("raw", "raw - format of photoes")
         note_3 = Note("", "")
@@ -116,12 +117,13 @@ class mainWindow(QWidget):
                             background-repeat: no-repeat;
                             background-position: center;
                             """)
-        self.button_create_note.clicked.connect(self.create_new_note)
+        self.button_create_note.clicked.connect(self.createNewNote)
 
         center_window(self)
 
         self.count_notes = len(notes)
 
+        # Кнопка обновления gui
         self.button_update = QPushButton(self)
         self.button_update.setStyleSheet("""
                     QPushButton {
@@ -130,7 +132,7 @@ class mainWindow(QWidget):
                         font: bold;
                         font-size: 16px;
                         border: none;
-                        border-radius: 5px;
+                        border-radius: 17px;
                     }
                     QPushButton:hover {
                         background-color: gray;
@@ -145,7 +147,10 @@ class mainWindow(QWidget):
         self.button_update.clicked.connect(self.refresh_notes_display)
 
     def changeEvent(self, event):
-        """Отслеживаем изменение состояния окна"""
+        """
+        Отслеживаем изменение состояния окна
+        """
+
         if event.type() == QEvent.Type.ActivationChange:
             if self.isActiveWindow():
                 global updateFlag
@@ -156,7 +161,10 @@ class mainWindow(QWidget):
         super().changeEvent(event)
 
     def showEvent(self, event):
-        """Срабатывает при показе окна"""
+        """
+        Срабатывает при показе окна
+        """
+
         super().showEvent(event)
 
         global updateFlag
@@ -167,7 +175,10 @@ class mainWindow(QWidget):
             updateFlag = False
 
     def refresh_notes_display(self):
-        """Полностью перерисовывает список заметок"""
+        """
+        Полностью перерисовывает список заметок
+        """
+
         while self.scroll_layout.count():
             item = self.scroll_layout.takeAt(0)
             if item.widget():
@@ -177,45 +188,90 @@ class mainWindow(QWidget):
         debug_log("[I] GUI обновлен")
 
     def close_func(self):
+        """
+        Функция для закрытия основного окна (срабатывает по кнопке и присылает сообщение в логе)
+        :return:
+        """
+
         exit_log("[Exit] Нажата кнопка закрытия приложения. Выход из приложения.")
         self.close()
 
-    def create_new_note(self):
+    def createNewNote(self):
+        """
+        Функция для открытия редактора записей (окна редактора)
+        :return:
+        """
+
         enter_log("[Enter] Нажата кнопка создания записи. Открытие окна создания записи.")
 
         self.note_window = createNewNoteWindow()
+
         self.note_window.setWindowModality(Qt.WindowModality.ApplicationModal)
 
         self.note_window.show()
 
     def show_notes_in_gui(self, scroll_layout):
         for note in notes:
-
             widget = QWidget()
             widget.setStyleSheet(f"""
-                                    background-color: {'#FF6B6B' if note.id % 2 == 0 else '#4ECDC4'};
-                                    border-radius: 8px;
-                                """)
-            widget.setFixedHeight(120)
+                background-color: {'#FF6B6B' if note.id % 2 == 0 else '#4ECDC4'};
+                border-radius: 8px;
+            """)
 
-            label_number_note = QLabel(f"Элемент {note.id}")
-            label_number_note.setStyleSheet("color: white; font-size: 16px; font-weight: bold;")
-            label_number_note.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            if not note.title and note.content:
+                widget.setFixedHeight(80)
+            elif note.title and not note.content:
+                widget.setFixedHeight(80)
+            elif not note.content and not note.content:
+                widget.setFixedHeight(80)
+            else:
+                widget.setFixedHeight(120)
 
-            label_title_note = QLabel(note.title)
+            # Горизонтальный layout
+            main_widget_layout = QHBoxLayout()
+            main_widget_layout.setSpacing(15)
+            main_widget_layout.setContentsMargins(10, 10, 10, 10)
+
+            if note.image_path and Path(note.image_path).exists():
+                widget.setFixedHeight(520)
+                image_label = QLabel()
+                pixmap = QPixmap(note.image_path)
+                if not pixmap.isNull():
+                    scaled_pixmap = pixmap.scaled(
+                        450, 450,
+                        Qt.AspectRatioMode.KeepAspectRatio,
+                        Qt.TransformationMode.SmoothTransformation
+                    )
+                    image_label.setPixmap(scaled_pixmap)
+                    image_label.setFixedSize(450, 450)
+                    image_label.setStyleSheet("border-radius: 5px;")
+                    main_widget_layout.addWidget(image_label)
+
+            # Вертикальный layout для текста
+            text_layout = QVBoxLayout()
+            text_layout.setSpacing(5)
+
+            # label_number_note = QLabel(f"Заметка {note.id}")
+            # label_number_note.setStyleSheet("color: white; font-size: 16px; font-weight: bold;")
+            # label_number_note.setAlignment(Qt.AlignmentFlag.AlignLeft)
+
+            label_title_note = QLabel(note.title if note.title else "")
             label_title_note.setStyleSheet("color: white; font-size: 16px; font-weight: bold;")
-            label_title_note.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            label_title_note.setAlignment(Qt.AlignmentFlag.AlignLeft)
 
-            label_content_note = QLabel(note.content)
-            label_content_note.setStyleSheet("color: white; font-size: 16px; font-weight: bold;")
-            label_content_note.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            label_content_note = QLabel(note.content if note.content else "")
+            label_content_note.setStyleSheet("color: white; font-size: 14px;")
+            label_content_note.setAlignment(Qt.AlignmentFlag.AlignLeft)
+            label_content_note.setWordWrap(True)
 
-            widget_layout = QVBoxLayout()
-            widget_layout.addWidget(label_number_note)
-            widget_layout.addWidget(label_title_note)
-            widget_layout.addWidget(label_content_note)
-            widget.setLayout(widget_layout)
+            # text_layout.addWidget(label_number_note)
+            text_layout.addWidget(label_title_note)
+            text_layout.addWidget(label_content_note)
 
+            main_widget_layout.addLayout(text_layout)
+            main_widget_layout.addStretch()
+
+            widget.setLayout(main_widget_layout)
             scroll_layout.addWidget(widget)
 
     def resizeEvent(self, event: QResizeEvent):
@@ -224,9 +280,6 @@ class mainWindow(QWidget):
         """
 
         new_size = event.size()
-
-        # new_width = new_size.width()
-        # new_height = new_size.height()
 
     def mousePressEvent(self, event) -> None:
         """

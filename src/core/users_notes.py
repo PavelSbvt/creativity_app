@@ -1,8 +1,9 @@
 from pathlib import Path
 
 from PyQt6.QtWidgets import (QWidget, QPushButton, QLabel, QTextEdit, QLineEdit,
-                             QVBoxLayout)
+                             QVBoxLayout, QFileDialog)
 from PyQt6.QtCore import Qt, QPoint
+from PyQt6.QtGui import QPixmap
 
 from utils.output_rich import simple_log, debug_log, success_log, exit_log, warning_log
 
@@ -16,12 +17,16 @@ class Note():
     Класс для заметок/записей пользователя
     """
 
-    def __init__(self, title, content):
+    def __init__(self, title, content, image_path = None):
 
         self.title = title
         self.content = content
+        self.image_path = image_path
 
         self.id: int = len(notes) + 1
+
+        if image_path:
+            success_log(f"[I] Создана запись №{self.id} с изображением: {Path(image_path).name}")
 
         if len(self.title) > 0 and len(self.content) > 0:
             if len(self.title) > 30 and len(self.content) > 30:
@@ -55,6 +60,10 @@ def showNotes():
         simple_log("Список записей пока пуст :(")
 
 class createNewNoteWindow(QWidget):
+    """
+    Класс для окна создания новой записи
+    """
+
     def __init__(self):
         super().__init__()
         self.drag_position: QPoint = QPoint()
@@ -151,19 +160,94 @@ class createNewNoteWindow(QWidget):
 
         self.button_create_note.clicked.connect(self.createNoteOnPressButton)
 
+        self.selected_image_path = None
+
+        # Кнопка выбора изображения
+        self.button_choose_image = QPushButton(self.content_widget)
+        self.button_choose_image.setStyleSheet("""
+            QPushButton {
+                background-color: #4CAF50;
+                color: white;
+                font: bold 14px;
+                border: none;
+                border-radius: 5px;
+                padding: 5px;
+            }
+            QPushButton:hover {
+                background-color: #45a049;
+            }
+            QPushButton:pressed {
+                background-color: #3d8b40;
+            }
+        """)
+        self.button_choose_image.setFixedSize(150,35)
+        self.button_choose_image.setText("Прикрепить фото")
+        self.button_choose_image.move(120,120)
+        self.button_choose_image.clicked.connect(self.selectImage)
+
+        # Label для отображения миниатюры
+        self.image_preview = QLabel(self.content_widget)
+        self.image_preview.setFixedSize(150, 150)
+        self.image_preview.move(320, 120)
+        self.image_preview.setStyleSheet("""
+                    border: 2px dashed white;
+                    border-radius: 8px;
+                    background-color: rgba(255,255,255,0.1);
+                """)
+        self.image_preview.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.image_preview.setText("Нет\nизображения")
+        self.image_preview.setWordWrap(True)
+
+    def selectImage(self):
+        """
+        Открывает диалог выбора изображения
+        """
+
+        file_path, _ = QFileDialog.getOpenFileName(
+            self,
+            "Выберите изображение",
+            "",
+            "Изображения (*.png *.jpg *.jpeg *.gif)"
+        )
+
+        if file_path:
+            self.selected_image_path = file_path
+
+            pixmap = QPixmap(file_path)
+            if not pixmap.isNull():
+                scaled_pixmap = pixmap.scaled(
+                    150, 150,
+                    Qt.AspectRatioMode.KeepAspectRatio,
+                    Qt.TransformationMode.SmoothTransformation
+                )
+                self.image_preview.setPixmap(scaled_pixmap)
+                self.image_preview.setText("")
+                debug_log(f"[I] Выбрано изображение: {Path(file_path).name}")
+            else:
+                warning_log("[W] Не удалось загрузить изображение")
+
     def createNoteOnPressButton(self):
+        """
+        Функция для создания новой заметки/записи
+        :return:
+        """
+
         title = self.title_input.text().strip()
         content = self.content_input.text().strip()
 
-        if not title and not content:
-            warning_log("[W] Попытка создать пустую заметку")
+        if not title and not content and not self.selected_image_path:
+            warning_log("[W] Попытка создать пустую заметку (нет заголовка, текста и изображения)")
             return
 
-        note = Note(title, content)
+        note = Note(title, content, self.selected_image_path)
         simple_log(f"[I] Создана запись №{note.id} по кнопке")
 
         self.title_input.clear()
         self.content_input.clear()
+        self.image_preview.clear()
+
+        self.image_preview.setText("Нет\nизображения")
+        self.selected_image_path = None
 
         global updateFlag
         updateFlag = True
