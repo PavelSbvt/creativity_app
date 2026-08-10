@@ -218,60 +218,92 @@ class mainWindow(QWidget):
                 border-radius: 8px;
             """)
 
-            if not note.title and note.content:
-                widget.setFixedHeight(80)
-            elif note.title and not note.content:
-                widget.setFixedHeight(80)
-            elif not note.content and not note.content:
-                widget.setFixedHeight(80)
-            else:
-                widget.setFixedHeight(120)
+            # Определяем наличие изображения
+            has_image = note.image_path and Path(note.image_path).exists()
+            has_title = bool(note.title)
+            has_content = bool(note.content)
 
-            # Горизонтальный layout
-            main_widget_layout = QHBoxLayout()
-            main_widget_layout.setSpacing(15)
-            main_widget_layout.setContentsMargins(10, 10, 10, 10)
+            # Основной вертикальный layout
+            main_widget_layout = QVBoxLayout()
+            main_widget_layout.setSpacing(5)
+            main_widget_layout.setContentsMargins(15, 12, 15, 12)
 
-            if note.image_path and Path(note.image_path).exists():
-                widget.setFixedHeight(520)
+            if has_image:
+                # Контейнер для центрирования изображения
+                image_container = QWidget()
+                image_container_layout = QHBoxLayout()
+                image_container_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+                image_container_layout.setContentsMargins(0, 0, 0, 0)
+
                 image_label = QLabel()
                 pixmap = QPixmap(note.image_path)
                 if not pixmap.isNull():
+                    max_width = 720
+                    max_height = 400
+
                     scaled_pixmap = pixmap.scaled(
-                        450, 450,
+                        max_width, max_height,
                         Qt.AspectRatioMode.KeepAspectRatio,
                         Qt.TransformationMode.SmoothTransformation
                     )
                     image_label.setPixmap(scaled_pixmap)
-                    image_label.setFixedSize(450, 450)
-                    image_label.setStyleSheet("border-radius: 5px;")
-                    main_widget_layout.addWidget(image_label)
+                    image_label.setFixedSize(scaled_pixmap.width(), scaled_pixmap.height())
+                    image_label.setStyleSheet("border-radius: 8px;")
+
+                    image_container_layout.addWidget(image_label)
+                    image_container.setLayout(image_container_layout)
+                    main_widget_layout.addWidget(image_container)
 
             # Вертикальный layout для текста
             text_layout = QVBoxLayout()
-            text_layout.setSpacing(5)
+            text_layout.setSpacing(3)
 
-            # label_number_note = QLabel(f"Заметка {note.id}")
-            # label_number_note.setStyleSheet("color: white; font-size: 16px; font-weight: bold;")
-            # label_number_note.setAlignment(Qt.AlignmentFlag.AlignLeft)
+            # Заголовок (если есть)
+            if has_title:
+                label_title_note = QLabel(note.title)
+                label_title_note.setStyleSheet("""
+                    color: white; 
+                    font-size: 16px; 
+                    font-weight: bold;
+                """)
+                label_title_note.setAlignment(Qt.AlignmentFlag.AlignLeft)
+                label_title_note.setWordWrap(True)
+                text_layout.addWidget(label_title_note)
 
-            label_title_note = QLabel(note.title if note.title else "")
-            label_title_note.setStyleSheet("color: white; font-size: 16px; font-weight: bold;")
-            label_title_note.setAlignment(Qt.AlignmentFlag.AlignLeft)
+            if has_content:
+                label_content_note = QLabel(note.content)
+                label_content_note.setStyleSheet("""
+                    color: white; 
+                    font-size: 14px;
+                """)
+                label_content_note.setAlignment(Qt.AlignmentFlag.AlignLeft)
+                label_content_note.setWordWrap(True)
+                text_layout.addWidget(label_content_note)
 
-            label_content_note = QLabel(note.content if note.content else "")
-            label_content_note.setStyleSheet("color: white; font-size: 14px;")
-            label_content_note.setAlignment(Qt.AlignmentFlag.AlignLeft)
-            label_content_note.setWordWrap(True)
+            # Добавляем текст в основной layout (если есть хоть что-то)
+            if has_title or has_content:
+                main_widget_layout.addLayout(text_layout)
 
-            # text_layout.addWidget(label_number_note)
-            text_layout.addWidget(label_title_note)
-            text_layout.addWidget(label_content_note)
-
-            main_widget_layout.addLayout(text_layout)
-            main_widget_layout.addStretch()
+            # Добавляем растяжку ТОЛЬКО если нет изображения
+            # Тогда текст будет сверху, а не по центру
+            if not has_image:
+                main_widget_layout.addStretch()
 
             widget.setLayout(main_widget_layout)
+
+            if has_image and (has_title or has_content):
+                widget.setFixedHeight(500)  # с изображением и текстом
+            elif has_image and not has_title and not has_content:
+                widget.setFixedHeight(420)  # только изображение (меньше высота)
+            elif not has_image and (has_title or has_content):
+                # без изображения - высота зависит от количества текста
+                if has_title and has_content:
+                    widget.setFixedHeight(110)
+                else:
+                    widget.setFixedHeight(80)
+            else:
+                widget.setFixedHeight(60)  # пустая заметка (не должно такого быть)
+
             scroll_layout.addWidget(widget)
 
     def resizeEvent(self, event: QResizeEvent):
