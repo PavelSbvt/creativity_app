@@ -9,6 +9,7 @@ from PyQt6.QtWidgets import QLabel, QWidget, QGraphicsOpacityEffect
 from utils.output_rich import simple_log, enter_log
 from gui.animations.animations_for_windows import (animationAppearanceWindow,
 animationDisappearanceWindow, animationDindisappearanceAndClosing)
+from utils.functions_for_main_window_gui import center_window
 
 
 class MyLoadingWindow(QWidget):
@@ -33,42 +34,57 @@ class MyLoadingWindow(QWidget):
 
         enter_log("[Enter] показ загрузочного окна.")
 
+        self.widget_background_fill = QWidget(self)
+        self.widget_background_fill.setStyleSheet("background-color: rgb(43, 43, 43); border-radius: 10px;")
+        self.widget_background_fill.setFixedSize(780, 520)
+        self.widget_background_fill.move(0, 0)
+
+        # фото
         self.loading_window = QWidget(self)
-        self.loading_window.setFixedSize(600,400)
-        self.loading_window.move(0,0)
+        self.loading_window.setFixedSize(390,500)
+        self.loading_window.move(380,10)
 
         simple_log("[I] вывод сообщения о сообщения о загрузке ('Приложение загружается...')")
 
-        self.colored_widget = QWidget(self)
-        self.colored_widget.setStyleSheet("background-color: rgba(0,0,0,0.5); border-radius: 10px;")
-        self.colored_widget.setFixedSize(430, 28)
-        self.colored_widget.move(10,362)
+        # self.colored_widget = QWidget(self)
+        # self.colored_widget.setStyleSheet("background-color: rgba(0,0,0,0.5); border-radius: 10px;")
+        # self.colored_widget.setFixedSize(430, 28)
+        # self.colored_widget.move(10,362)
 
         self.lb_blс_m_load = QLabel(self)
         self.lb_blс_m_load.setText("Приложение загружается, подождите, пожалуйста...")
-        self.lb_blс_m_load.setStyleSheet("color: white; font-size: 16px; "
+        self.lb_blс_m_load.setStyleSheet("color: rgb(169, 183, 198); font-size: 14px; "
                                          "font-weight: bold;")
-        self.lb_blс_m_load.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.lb_blс_m_load.setGeometry(10, 350, 430, 50)
-
-        self.block_shadow = QWidget(self)
-        self.block_shadow.setFixedSize(250, 60)
-        self.block_shadow.move(40, 15)
+        self.lb_blс_m_load.setAlignment(Qt.AlignmentFlag.AlignLeft)
+        self.lb_blс_m_load.setGeometry(10, 475, 370, 30)
+        self.lb_blс_m_load.setWordWrap(True)
 
         self.lb_hi_prog = QLabel(self)
         self.lb_hi_prog.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.lb_hi_prog.setGeometry(150, 100, 300, 50)
+        self.lb_hi_prog.setGeometry(10, 10, 370, 50)
 
-        simple_log("[I] показ гиф анимации процесса загрузки")
+        # фон текста
+        self.background_widget_text = QWidget(self)
+        self.background_widget_text.setStyleSheet("background-color: rgb(56, 56, 56); border-radius: 10px;")
+        self.background_widget_text.setFixedSize(360, 410)
+        self.background_widget_text.move(10,60)
+        self.label_text = QLabel(self.background_widget_text)
+        self.label_text.setText("Creativity app - приложение для фотографов и творческих людей. Здесь Вы сможете размещать свои фотографии и многое другое (в разработке).")
+        self.label_text.setWordWrap(True)
+        self.label_text.setStyleSheet("font-size: 14px;")
+        self.label_text.setGeometry(10,10, 340, 390)
+        self.label_text.setAlignment(Qt.AlignmentFlag.AlignTop)
 
-        path_gif_loading = Path('resources/for_start_window/gifs/loading_animation.gif')
-
-        gif_loading = QMovie(path_gif_loading.as_posix())
-        movie_widget = QLabel(self)
-        movie_widget.setFixedSize(64,66)
-        movie_widget.setMovie(gif_loading)
-        gif_loading.start()
-        movie_widget.move(520, 320)
+        # simple_log("[I] показ гиф анимации процесса загрузки")
+        #
+        # path_gif_loading = Path('resources/for_start_window/gifs/loading_animation.gif')
+        #
+        # gif_loading = QMovie(path_gif_loading.as_posix())
+        # movie_widget = QLabel(self)
+        # movie_widget.setFixedSize(64,66)
+        # movie_widget.setMovie(gif_loading)
+        # gif_loading.start()
+        # movie_widget.move(710, 450)
 
         self.background_window_by_time_of_day()
 
@@ -79,6 +95,8 @@ class MyLoadingWindow(QWidget):
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.start_closing)
         self.timer.start(3000)
+
+        center_window(self)
 
     def start_closing(self) -> None:
         """
@@ -100,26 +118,26 @@ class MyLoadingWindow(QWidget):
         simple_log("[I] вывод приветствия в соответствии с текущим времени")
 
         if 6 <= current_hour < 11:
-            self.lb_hi_prog.setGeometry(290, 15, 300, 50)
+            # self.lb_hi_prog.setGeometry(290, 15, 300, 50)
             self.lb_hi_prog.setText("Доброе утро!")
             self.lb_hi_prog.setStyleSheet("color: rgb(195, 206, 53); font-size: 28px; font-weight: bold;")
             path_bg_loading = Path('resources/images/for_start_window/images/birds_in_the_park.jpg')
 
         elif 11 <= current_hour < 17:
-            self.lb_hi_prog.setGeometry(150, 15, 300, 50)
+            # self.lb_hi_prog.setGeometry(150, 15, 300, 50)
             self.lb_hi_prog.setText("Добрый день")
             self.lb_hi_prog.setStyleSheet("color: rgb(54, 201, 255); font-size: 28px; font-weight: bold;")
             path_bg_loading = Path('resources/images/for_start_window/images/plane_in_the_sky.jpg')
 
         elif 17 <= current_hour < 21:
-            self.block_shadow.setStyleSheet("background-color: rgba(0,0,0,0.5); border-radius: 10px;")
-            self.lb_hi_prog.setGeometry(15, 15, 300, 50)
+            # self.block_shadow.setStyleSheet("background-color: rgba(0,0,0,0.5); border-radius: 10px;")
+            # self.lb_hi_prog.setGeometry(15, 15, 300, 50)
             self.lb_hi_prog.setText("Добрый вечер")
             self.lb_hi_prog.setStyleSheet("color: white; font-size: 32px; font-weight: bold;")
             path_bg_loading = Path('resources/images/for_start_window/images/bird_feeder_in_the_park.jpg')
 
         else:
-            self.lb_hi_prog.setGeometry(150, 25, 300, 50)
+            # self.lb_hi_prog.setGeometry(150, 25, 300, 50)
             self.lb_hi_prog.setText("Доброй ночи")
             self.lb_hi_prog.setStyleSheet("color: white; font-size: 26px; font-weight: bold;")
             path_bg_loading = Path('resources/images/for_start_window/images/porshe_at_night.jpg')
