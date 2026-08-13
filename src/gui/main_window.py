@@ -1,7 +1,7 @@
 from pathlib import Path
 
 from PyQt6.QtWidgets import (QWidget, QPushButton, QVBoxLayout, QHBoxLayout, QScrollArea,
-QLabel)
+QLabel, QTabWidget)
 from PyQt6.QtCore import Qt, QPoint, QEvent
 from PyQt6.QtGui import QResizeEvent, QPixmap
 
@@ -34,89 +34,77 @@ class mainWindow(QWidget):
         # Шапка
         self.cap_widget = QWidget()
         self.cap_widget.setStyleSheet("""
-                    background-color: orange;
-                    border-bottom: 2px solid #e67e22;
-                """)
+            background: qlineargradient(
+                x1: 0, y1: 0, x2: 1, y2: 0,
+                stop: 0 #FF8C00,
+                stop: 1 #FFA726
+            );
+            border-bottom: 2px solid #E65100;
+        """)
         self.cap_widget.setFixedHeight(55)
 
-        # Основной контент
-        self.content_widget = QWidget()
-        self.content_widget.setStyleSheet("background-color: gray;")
+        # Layout для шапки
+        cap_layout = QHBoxLayout()
+        cap_layout.setContentsMargins(15, 5, 15, 5)
+        cap_layout.setSpacing(10)
 
-        main_layout.addWidget(self.cap_widget)
-        main_layout.addWidget(self.content_widget)
-
-        scroll_area = QScrollArea()
-        scroll_area.setWidgetResizable(True)
-        scroll_area.setStyleSheet("""
-                    QScrollArea {
-                        background-color: #f5f5f5;
-                        border: none;
-                    }
-                    QScrollBar:vertical {
-                        width: 8px;
-                        background: #e0e0e0;
-                        border-radius: 4px;
-                    }
-                    QScrollBar::handle:vertical {
-                        background: #b0b0b0;
-                        border-radius: 4px;
-                    }
-                    QScrollBar::handle:vertical:hover {
-                        background: #909090;
-                    }
+        # Название или логотип
+        self.cap_title = QLabel("📝 Creativity")
+        self.cap_title.setStyleSheet("""
+                    color: white;
+                    font-size: 18px;
+                    font-weight: bold;
+                    font-family: 'Playfair Display';
                 """)
 
-        scroll_widget = QWidget()
-        scroll_widget.setStyleSheet("background-color: #f5f5f5;")
-
-        self.scroll_layout = QVBoxLayout()
-        self.scroll_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
-        self.scroll_layout.setSpacing(10)
-        self.scroll_layout.setContentsMargins(20, 20, 20, 20)
-
         # Создал объекты вручную (для теста)
-        note_1 = Note("title", "elephant")
-        note_2 = Note("raw", "raw - format of photoes")
-        note_3 = Note("", "")
-
-        self.show_notes_in_gui(self.scroll_layout)
-
-        scroll_widget.setLayout(self.scroll_layout)
-        scroll_area.setWidget(scroll_widget)
-
-        main_layout.addWidget(scroll_area)
-
-        self.setLayout(main_layout)
+        if not notes:
+            note_1 = Note("title", "elephant")
+            note_2 = Note("raw", "raw - format of photoes")
+            note_3 = Note("", "")
 
         # кнопка закрытия основного окна приложения.
-        self.button_close = QPushButton(self)
-        self.button_close.setFixedSize(45, 45)
-        self.button_close.move(750, 5)
+        self.button_close = QPushButton("✕")
+        self.button_close.setFixedSize(35, 35)
         self.button_close.setCursor(Qt.CursorShape.PointingHandCursor)
-        close_button_path = Path("resources/images/main_window/icons/close_icon.png")
-        self.button_close.setStyleSheet(f"""
-                            background-image:url({close_button_path.as_posix()});
-                            background-color: transparent;
-                            border: none;
-                            background-repeat: no-repeat;
-                            background-position: center;
-                            """)
+        self.button_close.setStyleSheet("""
+            QPushButton {
+                background-color: transparent;
+                color: white;
+                border: none;
+                font-size: 18px;
+                border-radius: 6px;
+            }
+            QPushButton:hover {
+                background-color: rgba(255, 0, 0, 0.3);
+            }
+            QPushButton:pressed {
+                background-color: rgba(255, 0, 0, 0.5);
+            }
+        """)
         self.button_close.clicked.connect(self.close_func)
 
         # Кнопка создания записи
         self.button_create_note = QPushButton(self)
-        self.button_create_note.setFixedSize(55,55)
-        self.button_create_note.move(730,530)
         self.button_create_note.setCursor(Qt.CursorShape.PointingHandCursor)
-        button_create_path = Path("resources/images/main_window/icons/button_create_new_note.png")
         self.button_create_note.setStyleSheet(f"""
-                            background-image:url({button_create_path.as_posix()});
-                            background-color: transparent;
-                            border: none;
-                            background-repeat: no-repeat;
-                            background-position: center;
+                            QPushButton {{
+                                background-color: rgba(255, 255, 255, 0.15);
+                                color: white;
+                                font-weight: bold;
+                                font-size: 13px;
+                                border: none;
+                                border-radius: 8px;
+                                padding: 6px 14px;
+                            }}
+                            QPushButton:hover {{
+                                background-color: rgba(255, 255, 255, 0.25);
+                            }}
+                            QPushButton:pressed {{
+                                background-color: rgba(255, 255, 255, 0.35);
+                            }}
                             """)
+        self.button_create_note.setText("Создать запись")
         self.button_create_note.clicked.connect(self.createNewNote)
 
         center_window(self)
@@ -126,25 +114,137 @@ class mainWindow(QWidget):
         # Кнопка обновления gui
         self.button_update = QPushButton(self)
         self.button_update.setStyleSheet("""
-                    QPushButton {
-                        background-color: white;
-                        color: black;
-                        font: bold;
-                        font-size: 16px;
-                        border: none;
-                        border-radius: 17px;
-                    }
-                    QPushButton:hover {
-                        background-color: gray;
-                    }
-                    QPushButton:pressed {
-                        background-color: black;
-                    }
+            QPushButton {
+                background-color: rgba(255, 255, 255, 0.15);
+                color: white;
+                font-weight: bold;
+                font-size: 13px;
+                border: none;
+                border-radius: 8px;
+                padding: 6px 14px;
+            }
+            QPushButton:hover {
+                background-color: rgba(255, 255, 255, 0.25);
+            }
+            QPushButton:pressed {
+                background-color: rgba(255, 255, 255, 0.35);
+            }
         """)
-        self.button_update.setFixedSize(35,35)
-        self.button_update.move(5,5)
-
+        self.button_update.setFixedHeight(30)
         self.button_update.clicked.connect(self.refresh_notes_display)
+        self.button_update.setText("Обновить")
+
+        # Добавляем в шапку: слева заголовок, справа кнопка
+        cap_layout.addWidget(self.cap_title)
+        cap_layout.addStretch()
+        cap_layout.addWidget(self.button_create_note)
+        cap_layout.addWidget(self.button_update)
+        cap_layout.addWidget(self.button_close)
+
+        self.cap_widget.setLayout(cap_layout)
+
+        # Таб виджет
+        self.tab_widget = QTabWidget(self)
+        self.tab_widget.setStyleSheet("""
+                    QTabWidget::pane {
+                        background-color: #2B2B2B;
+                        border: none;
+                        border-radius: 8px;
+                    }
+                    QTabBar::tab {
+                        background-color: #3C3F41;
+                        color: #A9B7C6;
+                        padding: 10px 20px;
+                        margin-right: 4px;
+                        border-top-left-radius: 8px;
+                        border-top-right-radius: 8px;
+                        font-size: 13px;
+                        font-weight: 500;
+                        font-family: 'Inter';
+                        border: none;
+                    }
+                    QTabBar::tab:hover {
+                        background-color: #4C4F51;
+                        color: #FFFFFF;
+                    }
+                    QTabBar::tab:selected {
+                        background-color: #4CAF50;
+                        color: white;
+                    }
+                    QTabBar::tab:selected:hover {
+                        background-color: #43A047;
+                    }
+                """)
+
+        # Создаем страницы
+        tab1 = QWidget()
+        tab1_layout = QVBoxLayout()
+        tab1_layout.addWidget(QLabel("Содержимое вкладки 1"))
+        tab1.setLayout(tab1_layout)
+
+        # ScrollArea для заметов
+        scroll_area = QScrollArea()
+        scroll_area.setWidgetResizable(True)
+        scroll_area.setStyleSheet("""
+                            QScrollArea {
+                                background-color: #f5f5f5;
+                                border: none;
+                            }
+                            QScrollBar:vertical {
+                                width: 8px;
+                                background: #e0e0e0;
+                                border-radius: 4px;
+                            }
+                            QScrollBar::handle:vertical {
+                                background: #b0b0b0;
+                                border-radius: 4px;
+                            }
+                            QScrollBar::handle:vertical:hover {
+                                background: #909090;
+                            }
+                        """)
+
+        scroll_widget = QWidget()
+        scroll_widget.setStyleSheet("background-color: #2B2B2B;")
+
+        self.scroll_layout = QVBoxLayout()
+        self.scroll_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+        self.scroll_layout.setSpacing(10)
+        self.scroll_layout.setContentsMargins(20, 20, 20, 20)
+
+        scroll_widget.setLayout(self.scroll_layout)
+        scroll_area.setWidget(scroll_widget)
+
+        tab1_layout.addWidget(scroll_area)
+        tab1.setLayout(tab1_layout)
+
+        tab2 = QWidget()
+        tab2_layout = QVBoxLayout()
+        tab2_layout.addWidget(QLabel("Содержимое вкладки 2"))
+        tab2.setLayout(tab2_layout)
+
+        tab3 = QWidget()
+        tab3_layout = QVBoxLayout()
+        tab3_layout.addWidget(QLabel("Содержимое вкладки 3"))
+        tab3.setLayout(tab3_layout)
+
+        tab4 = QWidget()
+        tab4_layout = QVBoxLayout()
+        tab4_layout.addWidget(QLabel("Содержимое вкладки 4"))
+        tab4.setLayout(tab4_layout)
+
+        # Добавляем вкладки
+        self.tab_widget.addTab(tab1, "📋 Главная")
+        self.tab_widget.addTab(tab2, "📸 Фотографии")
+        self.tab_widget.addTab(tab3, "📈 Статистика")
+        self.tab_widget.addTab(tab4, "⚙️ Настройки")
+
+        main_layout.addWidget(self.cap_widget)
+        main_layout.addWidget(self.tab_widget)
+
+        self.setLayout(main_layout)
+
+        self.show_notes_in_gui(self.scroll_layout)
 
     def changeEvent(self, event):
         """
@@ -211,10 +311,17 @@ class mainWindow(QWidget):
         self.note_window.show()
 
     def show_notes_in_gui(self, scroll_layout):
-        for note in notes:
+        """
+        Функция для вывода всех записей
+        :param scroll_layout:
+        :return:
+        """
+
+        for note in reversed(notes):
+
             widget = QWidget()
             widget.setStyleSheet(f"""
-                background-color: {'#FF6B6B' if note.id % 2 == 0 else '#4ECDC4'};
+                background-color: {'#1B2A22' if note.id % 2 == 0 else '#1B2D2A'};
                 border-radius: 8px;
             """)
 
@@ -302,7 +409,7 @@ class mainWindow(QWidget):
                 else:
                     widget.setFixedHeight(80)
             else:
-                widget.setFixedHeight(60)  # пустая заметка (не должно такого быть)
+                widget.setFixedHeight(60)  # пустая заметка
 
             scroll_layout.addWidget(widget)
 

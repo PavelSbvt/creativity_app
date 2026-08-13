@@ -4,7 +4,7 @@ import random
 
 from PyQt6.QtCore import QPoint, QTimer, pyqtSignal, Qt
 from PyQt6.QtGui import QFontDatabase, QFont
-from PyQt6.QtWidgets import QLabel, QWidget, QVBoxLayout, QProgressBar, QFrame
+from PyQt6.QtWidgets import (QLabel, QWidget, QVBoxLayout, QProgressBar, QFrame)
 
 from utils.output_rich import enter_log, debug_log
 from gui.animations.animations_for_windows import (animationAppearanceWindow,
