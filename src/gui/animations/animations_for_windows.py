@@ -1,7 +1,7 @@
 from PyQt6.QtCore import (QPropertyAnimation,QEasingCurve)
 from PyQt6.QtWidgets import QGraphicsOpacityEffect
 
-from utils.output_rich import simple_log
+from utils.output_rich import debug_log
 
 
 def animationAppearanceWindow(widget, duration: int = 700,
@@ -69,7 +69,7 @@ def animationDindisappearanceAndClosing(widget, duration: int = 450) -> None:
 
     def closeWindow():
         widget.close()
-        simple_log("[I] закрытие загрузочного окна")
+        debug_log("[I] закрытие загрузочного окна")
         if hasattr(widget, 'closed'):
             widget.closed.emit()
         widget.deleteLater()

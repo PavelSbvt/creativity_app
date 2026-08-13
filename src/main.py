@@ -6,7 +6,7 @@ from PyQt6.QtGui import QIcon
 
 from gui.loading_start_window import MyLoadingWindow
 from gui.main_window import mainWindow
-from utils.output_rich import simple_log, enter_log, exit_log
+from utils.output_rich import enter_log, exit_log
 
 
 def main() -> None:

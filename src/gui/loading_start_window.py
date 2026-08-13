@@ -2,14 +2,13 @@ from datetime import datetime
 from pathlib import Path
 import random
 
-from PyQt6.QtCore import (QPoint, QTimer, pyqtSignal, Qt, QPropertyAnimation,
-                          QEasingCurve)
-from PyQt6.QtGui import QFontDatabase, QFont, QColor
-from PyQt6.QtWidgets import QLabel, QWidget, QVBoxLayout, QProgressBar, QFrame, QGraphicsDropShadowEffect
+from PyQt6.QtCore import QPoint, QTimer, pyqtSignal, Qt
+from PyQt6.QtGui import QFontDatabase, QFont
+from PyQt6.QtWidgets import QLabel, QWidget, QVBoxLayout, QProgressBar, QFrame
 
-from utils.output_rich import simple_log, enter_log, debug_log
+from utils.output_rich import enter_log, debug_log
 from gui.animations.animations_for_windows import (animationAppearanceWindow,
-animationDisappearanceWindow, animationDindisappearanceAndClosing)
+animationDindisappearanceAndClosing)
 from utils.functions_for_main_window_gui import center_window
 from utils.citations import QUOTES
 
@@ -207,17 +206,17 @@ class MyLoadingWindow(QWidget):
 
         self.timer_animation = QTimer()
         self.timer_animation.timeout.connect(self.update_animation)
-        self.timer_animation.start(30)
+        self.timer_animation.start(35)
 
         self.background_window_by_time_of_day()
 
         animationAppearanceWindow(self, duration = 700)
 
-        simple_log("[I] запуск таймера на 3 секунды, после чего окна закроется")
+        debug_log("[I] запуск таймера на 3 секунды, после чего окна закроется")
 
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.start_closing)
-        self.timer.start(3300)
+        self.timer.start(5000)
 
         center_window(self)
 
@@ -247,7 +246,7 @@ class MyLoadingWindow(QWidget):
         """
         Запускает анимацию исчезания и закрытия окна
         """
-        simple_log("[I] запуск анимации исчезания окна")
+        debug_log("[I] запуск анимации исчезания окна")
         animationDindisappearanceAndClosing(self, duration=1000)
 
     def background_window_by_time_of_day(self) -> None:
@@ -258,9 +257,9 @@ class MyLoadingWindow(QWidget):
 
         current_hour = datetime.now().hour
 
-        simple_log(f"[I] текущее время {current_hour}")
+        debug_log(f"[I] текущее время {current_hour}")
 
-        simple_log("[I] вывод приветствия в соответствии с текущим времени")
+        debug_log("[I] вывод приветствия в соответствии с текущим времени")
 
         if 6 <= current_hour < 11:
             self.lb_hi_prog.setText("Доброе утро!")
