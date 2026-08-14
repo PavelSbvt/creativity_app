@@ -5,8 +5,8 @@ QLabel, QTabWidget)
 from PyQt6.QtCore import Qt, QPoint, QEvent
 from PyQt6.QtGui import QResizeEvent, QPixmap
 
-from utils.functions_for_main_window_gui import center_window
-from core.users_notes import notes, Note, createNote, createNewNoteWindow, updateFlag
+from utils.functions_for_window_gui import center_window
+from core.users_notes import notes, Note, createNewNoteWindow, updateFlag
 from utils.output_rich import simple_log, exit_log, enter_log, debug_log
 
 
@@ -30,6 +30,7 @@ class mainWindow(QWidget):
         main_layout = QVBoxLayout()
         main_layout.setContentsMargins(0, 0, 0, 0)
         main_layout.setSpacing(0)
+        self.setStyleSheet("background-color: #1A1A1A;")
 
         # Шапка
         self.cap_widget = QWidget()
@@ -49,7 +50,7 @@ class mainWindow(QWidget):
         cap_layout.setSpacing(10)
 
         # Название или логотип
-        self.cap_title = QLabel("📝 Creativity")
+        self.cap_title = QLabel("📷 Creativity")
         self.cap_title.setStyleSheet("""
                     color: white;
                     font-size: 18px;
@@ -131,6 +132,7 @@ class mainWindow(QWidget):
             }
         """)
         self.button_update.setFixedHeight(30)
+        self.button_update.setCursor(Qt.CursorShape.PointingHandCursor)
         self.button_update.clicked.connect(self.refresh_notes_display)
         self.button_update.setText("Обновить")
 
@@ -179,7 +181,7 @@ class mainWindow(QWidget):
         # Создаем страницы
         tab1 = QWidget()
         tab1_layout = QVBoxLayout()
-        tab1_layout.addWidget(QLabel("Содержимое вкладки 1"))
+        # tab1_layout.addWidget()
         tab1.setLayout(tab1_layout)
 
         # ScrollArea для заметов

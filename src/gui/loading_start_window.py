@@ -6,10 +6,10 @@ from PyQt6.QtCore import QPoint, QTimer, pyqtSignal, Qt
 from PyQt6.QtGui import QFontDatabase, QFont
 from PyQt6.QtWidgets import (QLabel, QWidget, QVBoxLayout, QProgressBar, QFrame)
 
-from utils.output_rich import enter_log, debug_log
+from utils.output_rich import enter_log, debug_log, warning_log
 from gui.animations.animations_for_windows import (animationAppearanceWindow,
 animationDindisappearanceAndClosing)
-from utils.functions_for_main_window_gui import center_window
+from utils.functions_for_window_gui import center_window, getMainColorImage
 from utils.citations import QUOTES
 
 
@@ -27,6 +27,7 @@ class MyLoadingWindow(QWidget):
 
         super().__init__()
 
+        # Добавляю новые семейства шрифтов из ресурсов проекта.
         front_Inter_italic_path = Path("resources/fonts/Inter/Inter-Italic-VariableFont_opsz,wght.ttf")
         font_Inter_path = Path("resources/fonts/Inter/Inter-VariableFont_opsz,wght.ttf")
 
@@ -59,6 +60,11 @@ class MyLoadingWindow(QWidget):
         self.widget_background_fill.setFixedSize(780, 520)
         self.widget_background_fill.move(0, 0)
 
+        # виджет с градиентом от главного цвета изображения до цвета главного фона
+        self.widget_gradient = QWidget(self)
+        self.widget_gradient.setFixedSize(780, 520)
+        self.widget_gradient.move(0,0)
+
         # фото
         self.loading_window = QWidget(self)
         self.loading_window.setFixedSize(390,500)
@@ -79,13 +85,13 @@ class MyLoadingWindow(QWidget):
         self.block_app_name = QLabel(self)
         self.block_app_name.setStyleSheet("color: white; font: bold;")
         self.block_app_name.setFont(QFont(self.font_family_Playfair_Display, 30))
-        self.block_app_name.setText("Creativity")
+        self.block_app_name.setText("📷 Creativity")
         self.block_app_name.setAlignment(Qt.AlignmentFlag.AlignLeft)
         self.block_app_name.setGeometry(10,0,370,50)
 
         # фон текста
         self.background_widget_text = QWidget(self)
-        self.background_widget_text.setStyleSheet("background-color: rgb(56, 56, 56); border-radius: 10px;")
+        self.background_widget_text.setStyleSheet("background-color: rgba(255, 255, 255, 0.03); border-radius: 10px;")
         self.background_widget_text.setFixedSize(360, 150)
         self.background_widget_text.move(10,60)
         self.label_text = QLabel(self.background_widget_text)
@@ -99,7 +105,6 @@ class MyLoadingWindow(QWidget):
         self.lb_hi_prog = QLabel(self)
         self.lb_hi_prog.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.lb_hi_prog.setFont(QFont(self.font_family_Playfair_Display, 20))
-        self.lb_hi_prog.setStyleSheet("font-weight: bold;")
         self.lb_hi_prog.setGeometry(10, 60, 370, 40)
 
         # Виджет для цитат
@@ -220,6 +225,31 @@ class MyLoadingWindow(QWidget):
 
         center_window(self)
 
+    def get_random_image_from_folder(self, folder_path: str) -> str:
+        """
+        Возвращает путь к случайному изображению из указанной папки
+        :param folder_path: путь к папке с изображениями
+        :return: путь к случайному изображению
+        """
+        folder = Path(folder_path)
+
+        # Проверяем, существует ли папка
+        if not folder.exists():
+            warning_log(f"[W] Папка не найдена: {folder_path}")
+            return ""
+
+        image_extensions = {'.jpg', '.jpeg', '.png', '.gif'}
+        images = [f for f in folder.iterdir() if f.suffix.lower() in image_extensions]
+
+        if not images:
+            warning_log(f"[W] В папке нет изображений: {folder_path}")
+            return ""
+
+        random_image = random.choice(images)
+        debug_log(f"[I] Выбрано случайное изображение: {random_image.name}")
+
+        return str(random_image)
+
     def getCitationWithAuthor(self):
         """
         Возвращает случайную цитату и её автора вместе
@@ -255,7 +285,8 @@ class MyLoadingWindow(QWidget):
         :return:
         """
 
-        current_hour = datetime.now().hour
+        # current_hour = datetime.now().hour
+        current_hour = 23 # - отладка и тестирование
 
         debug_log(f"[I] текущее время {current_hour}")
 
@@ -263,26 +294,42 @@ class MyLoadingWindow(QWidget):
 
         if 6 <= current_hour < 11:
             self.lb_hi_prog.setText("Доброе утро!")
-            self.lb_hi_prog.setStyleSheet("color: rgb(195, 206, 53);")
-            path_bg_loading = Path('resources/images/for_start_window/images/birds_in_the_park.jpg')
+            folder_path = "resources/images/for_start_window/images/morning"
+
 
         elif 11 <= current_hour < 17:
             self.lb_hi_prog.setText("Добрый день")
-            self.lb_hi_prog.setStyleSheet("color: rgb(54, 201, 255);")
-            path_bg_loading = Path('resources/images/for_start_window/images/plane_in_the_sky.jpg')
+            folder_path = "resources/images/for_start_window/images/day"
 
         elif 17 <= current_hour < 21:
             self.lb_hi_prog.setText("Добрый вечер")
-            self.lb_hi_prog.setStyleSheet("color: white;")
-            path_bg_loading = Path('resources/images/for_start_window/images/bird_feeder_in_the_park.jpg')
+            folder_path = "resources/images/for_start_window/images/evening"
 
         else:
             self.lb_hi_prog.setText("Доброй ночи")
-            self.lb_hi_prog.setStyleSheet("color: white;")
-            path_bg_loading = Path('resources/images/for_start_window/images/porshe_at_night.jpg')
+            folder_path = "resources/images/for_start_window/images/night"
 
+        img_path = self.get_random_image_from_folder(folder_path)
+        path_bg_loading = Path(f'{img_path}')
         self.loading_window.setStyleSheet(
             f"background-image: url({path_bg_loading.as_posix()}); border-radius: 10px;")
+
+        # главный цвет изображения
+        main_color = getMainColorImage(img_path)
+        self.lb_hi_prog.setStyleSheet(f"font-weight: bold; color: rgb{main_color}")
+
+        r, g, b = main_color
+
+        # Создаём градиент от цвета изображения к тёмному фону
+        self.widget_gradient.setStyleSheet(f"""
+                background: qlineargradient(
+                    x1: 0, y1: 1, x2: 1, y2: 0,
+                    stop: 0 rgba({r}, {g}, {b}, 0.0),    /* снизу — цвет изображения (прозрачный) */
+                    stop: 0.6 rgba({r}, {g}, {b}, 0.15), /* середина — лёгкий оттенок */
+                    stop: 1 rgba({r}, {g}, {b}, 0.3)     /* сверху — цвет изображения (полупрозрачный) */
+                );
+                border-radius: 10px;
+            """)
 
     def mousePressEvent(self, event) -> None:
         """
