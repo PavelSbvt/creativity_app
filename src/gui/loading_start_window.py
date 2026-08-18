@@ -287,24 +287,22 @@ class MyLoadingWindow(QWidget):
         if not self.flag_finish_animation:
             self.widget_gradient.setStyleSheet(f"""
                     background: qlineargradient(
-                        x1: 0, y1: 0.5, x2: 1, y2: 0,
+                        x1: 0, y1: 0, x2: 1, y2: 0.5,
                         stop: 0 rgba({r}, {g}, {b}, 0.0),
                         stop: {self.gradient_1_pos + pos * 0.3} rgba({r}, {g}, {b}, {self.opacity_animation:.2f}),
-                        stop: {self.gradient_2_pos + pos * 0.3} rgba({change_red * 0.5:.0f}, {change_green * 0.5:.0f}, {change_blue * 0.5:.0f}, {self.opacity_animation * 3:.2f}),
-                        stop: 1 rgba({change_red}, {change_green}, {change_blue}, {self.opacity_animation * 5:.2f})
+                        stop: {self.gradient_2_pos + pos * 0.3} rgba({change_red * 0.5:.0f}, {change_green * 0.5:.0f}, {change_blue * 0.5:.0f}, {self.opacity_animation * 1:.2f}),
+                        stop: 1 rgba({change_red}, {change_green}, {change_blue}, {self.opacity_animation * 4:.2f})
                     );
                     border-radius: 10px;
                 """)
         else:
             self.widget_gradient.setStyleSheet(f"""
                     background: qlineargradient(
-
-                        x1: 0, y1: 0.5, x2: 1, y2: 0,
-                        
+                        x1: 0, y1: 0, x2: 1, y2: 0.5,
                         stop: 0 rgba({r}, {g}, {b}, 0.0),
                         stop: {self.gradient_1_pos + pos * 0.3} rgba({r}, {g}, {b}, {self.opacity_animation * 1:.2f}),
-                        stop: {self.gradient_2_pos + pos * 0.3} rgba({change_red * 0.5:.0f}, {change_green * 0.5:.0f}, {change_blue * 0.5:.0f}, {self.opacity_animation * 3:.2f}),
-                        stop: 1 rgba({change_red}, {change_green}, {change_blue}, {self.opacity_animation * 5:.2f})
+                        stop: {self.gradient_2_pos + pos * 0.3} rgba({change_red * 0.5:.0f}, {change_green * 0.5:.0f}, {change_blue * 0.5:.0f}, {self.opacity_animation * 1:.2f}),
+                        stop: 1 rgba({change_red}, {change_green}, {change_blue}, {self.opacity_animation * 4:.2f})
                     );
                     border-radius: 10px;
                 """)
