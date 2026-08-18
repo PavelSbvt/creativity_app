@@ -1,3 +1,4 @@
+import time
 from datetime import datetime
 from pathlib import Path
 import random
@@ -213,8 +214,6 @@ class MyLoadingWindow(QWidget):
         self.timer_animation.timeout.connect(self.update_animation)
         self.timer_animation.start(35)
 
-        self.background_window_by_time_of_day()
-
         animationAppearanceWindow(self, duration = 700)
 
         debug_log("[I] запуск таймера на 3 секунды, после чего окна закроется")
@@ -225,6 +224,78 @@ class MyLoadingWindow(QWidget):
 
         center_window(self)
 
+        self.gradient_timer = QTimer()
+        self.gradient_timer.timeout.connect(self.update_animation_gradient)
+        self.gradient_timer.start(40)
+
+        self.flag_finish_animation = False
+
+        self.base_position_gradient = 0.0
+        self.direction_animation = 1
+        self.speed = 0.015
+
+        self.current_r = 43
+        self.current_g = 43
+        self.current_b = 43
+
+        self.background_window_by_time_of_day()
+
+        self.gradient_1_pos = 0.25
+        self.gradient_2_pos = 0.45
+
+        self.opacity_animation = 0.05
+
+    def update_animation_gradient(self):
+        """
+        Функция для создания анимации виджету с градиентом на фоне (виджет находится поверх основного фона окна) - плавное смещение градиента и уменьшение его прозрачности.
+        :return: 
+        """""
+
+        r, g, b = self.current_r, self.current_g, self.current_b
+
+        self.base_position_gradient += self.speed * self.direction_animation
+
+        if self.base_position_gradient >= 0.5:
+            self.base_position_gradient = 0.5
+            self.direction_animation = -1
+
+        elif self.base_position_gradient <= 0.0:
+            self.flag_finish_animation = True
+            self.base_position_gradient = 0.0
+
+        pos = self.base_position_gradient
+
+        if not self.flag_finish_animation:
+            self.widget_gradient.setStyleSheet(f"""
+                background: qlineargradient(
+                    x1: 0, y1: 0.75, x2: 1, y2: 0.45,
+                    stop: 0 rgba({r}, {g}, {b}, 0.0),
+                    stop: {self.gradient_1_pos + pos * 0.3} rgba({r}, {g}, {b}, {self.opacity_animation}),
+                    stop: {self.gradient_2_pos + pos * 0.3} rgba({r + 10}, {g + 10}, {b + 10}, {self.opacity_animation * 4}),
+                    stop: 1 rgba({r}, {g}, {b}, {self.opacity_animation * 8})
+                );
+                border-radius: 10px;
+            """)
+        else:
+            self.widget_gradient.setStyleSheet(f"""
+                                        background: qlineargradient(
+                                            x1: 0, y1: 0.75, x2: 1, y2: 0.45,
+                                            stop: 0 rgba({r}, {g}, {b}, 0.0),
+                                            stop: {self.gradient_1_pos + pos * 0.3} rgba({r}, {g}, {b}, {self.opacity_animation * 1}),
+                                            stop: {self.gradient_2_pos + pos * 0.3} rgba({r + 10}, {g + 10}, {b + 10}, {self.opacity_animation * 4}),
+                                            stop: 1 rgba({r}, {g}, {b}, {self.opacity_animation * 8})
+                                        );
+                                        border-radius: 10px;
+                                    """)
+            if self.opacity_animation <= 0.1:
+                self.opacity_animation += 0.001
+
+            if (self.gradient_1_pos + pos * 0.6) >= 0.1:
+                self.gradient_1_pos -= 0.005
+                self.gradient_2_pos -= 0.005
+            else:
+                return
+
     def get_random_image_from_folder(self, folder_path: str) -> str:
         """
         Возвращает путь к случайному изображению из указанной папки
@@ -233,7 +304,6 @@ class MyLoadingWindow(QWidget):
         """
         folder = Path(folder_path)
 
-        # Проверяем, существует ли папка
         if not folder.exists():
             warning_log(f"[W] Папка не найдена: {folder_path}")
             return ""
@@ -285,8 +355,8 @@ class MyLoadingWindow(QWidget):
         :return:
         """
 
-        # current_hour = datetime.now().hour
-        current_hour = 23 # - отладка и тестирование
+        current_hour = datetime.now().hour
+        # current_hour = 23 # - отладка и тестирование
 
         debug_log(f"[I] текущее время {current_hour}")
 
@@ -321,15 +391,10 @@ class MyLoadingWindow(QWidget):
         r, g, b = main_color
 
         # Создаём градиент от цвета изображения к тёмному фону
-        self.widget_gradient.setStyleSheet(f"""
-                background: qlineargradient(
-                    x1: 0, y1: 1, x2: 1, y2: 0,
-                    stop: 0 rgba({r}, {g}, {b}, 0.0),    /* снизу — цвет изображения (прозрачный) */
-                    stop: 0.6 rgba({r}, {g}, {b}, 0.15), /* середина — лёгкий оттенок */
-                    stop: 1 rgba({r}, {g}, {b}, 0.3)     /* сверху — цвет изображения (полупрозрачный) */
-                );
-                border-radius: 10px;
-            """)
+        # Сделаю анимацию смещения градиента + небольшое изменение цвета
+        self.current_r = r
+        self.current_b = b
+        self.current_g = g
 
     def mousePressEvent(self, event) -> None:
         """
