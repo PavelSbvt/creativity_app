@@ -224,9 +224,10 @@ class MyLoadingWindow(QWidget):
 
         center_window(self)
 
+        # Таймер для запуска анимации градиента
         self.gradient_timer = QTimer()
         self.gradient_timer.timeout.connect(self.update_animation_gradient)
-        self.gradient_timer.start(40)
+        self.gradient_timer.start(30)
 
         self.flag_finish_animation = False
 
@@ -240,10 +241,13 @@ class MyLoadingWindow(QWidget):
 
         self.background_window_by_time_of_day()
 
-        self.gradient_1_pos = 0.25
-        self.gradient_2_pos = 0.45
+        self.gradient_1_pos = 0.15
+        self.gradient_2_pos = 0.3
 
         self.opacity_animation = 0.05
+
+        self.change_color = 1
+        self.change_color_direction = 1
 
     def update_animation_gradient(self):
         """
@@ -265,30 +269,45 @@ class MyLoadingWindow(QWidget):
 
         pos = self.base_position_gradient
 
+        self.change_color += 0.5 * self.change_color_direction
+
+        if self.change_color >= 80:
+            self.change_color = 80
+            self.change_color_direction = -1
+        elif self.change_color <= 1:
+            self.change_color = 1
+            self.change_color_direction = 1
+
+        index_changed_color = int(self.change_color * 0.5)
+
+        change_red = min(255, r + index_changed_color)
+        change_green = min(255, g + index_changed_color)
+        change_blue = min(255, b + index_changed_color)
+
         if not self.flag_finish_animation:
             self.widget_gradient.setStyleSheet(f"""
-                background: qlineargradient(
-                    x1: 0, y1: 0.75, x2: 1, y2: 0.45,
-                    stop: 0 rgba({r}, {g}, {b}, 0.0),
-                    stop: {self.gradient_1_pos + pos * 0.3} rgba({r}, {g}, {b}, {self.opacity_animation}),
-                    stop: {self.gradient_2_pos + pos * 0.3} rgba({r + 10}, {g + 10}, {b + 10}, {self.opacity_animation * 4}),
-                    stop: 1 rgba({r}, {g}, {b}, {self.opacity_animation * 8})
-                );
-                border-radius: 10px;
-            """)
+                    background: qlineargradient(
+                        x1: 0, y1: 0.75, x2: 1, y2: 0.45,
+                        stop: 0 rgba({r}, {g}, {b}, 0.0),
+                        stop: {self.gradient_1_pos + pos * 0.3} rgba({r}, {g}, {b}, {self.opacity_animation:.2f}),
+                        stop: {self.gradient_2_pos + pos * 0.3} rgba({change_red * 0.5:.0f}, {change_green * 0.5:.0f}, {change_blue * 0.5:.0f}, {self.opacity_animation * 4:.2f}),
+                        stop: 1 rgba({change_red}, {change_green}, {change_blue}, {self.opacity_animation * 8:.2f})
+                    );
+                    border-radius: 10px;
+                """)
         else:
             self.widget_gradient.setStyleSheet(f"""
-                                        background: qlineargradient(
-                                            x1: 0, y1: 0.75, x2: 1, y2: 0.45,
-                                            stop: 0 rgba({r}, {g}, {b}, 0.0),
-                                            stop: {self.gradient_1_pos + pos * 0.3} rgba({r}, {g}, {b}, {self.opacity_animation * 1}),
-                                            stop: {self.gradient_2_pos + pos * 0.3} rgba({r + 10}, {g + 10}, {b + 10}, {self.opacity_animation * 4}),
-                                            stop: 1 rgba({r}, {g}, {b}, {self.opacity_animation * 8})
-                                        );
-                                        border-radius: 10px;
-                                    """)
+                    background: qlineargradient(
+                        x1: 0, y1: 0.75, x2: 1, y2: 0.45,
+                        stop: 0 rgba({r}, {g}, {b}, 0.0),
+                        stop: {self.gradient_1_pos + pos * 0.3} rgba({r}, {g}, {b}, {self.opacity_animation * 1:.2f}),
+                        stop: {self.gradient_2_pos + pos * 0.3} rgba({change_red * 0.5:.0f}, {change_green * 0.5:.0f}, {change_blue * 0.5:.0f}, {self.opacity_animation * 4:.2f}),
+                        stop: 1 rgba({change_red}, {change_green}, {change_blue}, {self.opacity_animation * 8:.2f})
+                    );
+                    border-radius: 10px;
+                """)
             if self.opacity_animation <= 0.1:
-                self.opacity_animation += 0.001
+                self.opacity_animation += 0.0005
 
             if (self.gradient_1_pos + pos * 0.6) >= 0.1:
                 self.gradient_1_pos -= 0.005
