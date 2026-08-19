@@ -1,17 +1,15 @@
-import time
-from datetime import datetime
 from pathlib import Path
-import random
 
 from PyQt6.QtCore import QPoint, QTimer, pyqtSignal, Qt
 from PyQt6.QtGui import QFontDatabase, QFont
 from PyQt6.QtWidgets import (QLabel, QWidget, QVBoxLayout, QProgressBar, QFrame)
 
-from utils.output_rich import enter_log, debug_log, warning_log
+from utils.output_rich import enter_log, debug_log
 from gui.animations.animations_for_windows import (animationAppearanceWindow,
-animationDindisappearanceAndClosing)
-from utils.functions_for_window_gui import center_window, getMainColorImage
-from utils.citations import QUOTES
+    animationDindisappearanceAndClosing)
+from utils.functions_for_window_gui import (center_window,
+    background_window_by_time_of_day, update_animation_gradient)
+from utils.citations import get_citation_with_author
 
 
 class MyLoadingWindow(QWidget):
@@ -122,7 +120,7 @@ class MyLoadingWindow(QWidget):
         self.citation_layout.setSpacing(10)
         self.citation_layout.setContentsMargins(10, 10, 10, 10)
 
-        citation_text, author_text = self.getCitationWithAuthor()
+        citation_text, author_text = get_citation_with_author()
 
         # Цитата
         self.citation_label = QLabel()
@@ -144,7 +142,7 @@ class MyLoadingWindow(QWidget):
             padding: 5px;
         """)
 
-        # Разделитель
+        # Разделитель между текстом цитаты и её автором
         separator = QFrame()
         separator.setFrameShape(QFrame.Shape.HLine)
         separator.setStyleSheet("""
@@ -183,7 +181,7 @@ class MyLoadingWindow(QWidget):
 
         self.citation.setLayout(self.citation_layout)
 
-        # Прогрессбар
+        # Progressbar
         self.progress_bar = QProgressBar(self)
         self.progress_bar.setStyleSheet("""
             QProgressBar {
@@ -226,133 +224,44 @@ class MyLoadingWindow(QWidget):
 
         # Таймер для запуска анимации градиента
         self.gradient_timer = QTimer()
-        self.gradient_timer.timeout.connect(self.update_animation_gradient)
         self.gradient_timer.start(30)
 
+        # Флаг окончания анимации градиента (градиент проходит по одному разу
+        # сначала слева направо, а затем возвращается - нужно передать момент остановки)
         self.flag_finish_animation = False
 
+        # Переменная для указания базовой позиции сдвига градиента.
+        # Сначала ноль, потом меняется в функции анимации
         self.base_position_gradient = 0.0
+        # Направление анимации - 1 = вперёд (True), -1 = ложь - назад
         self.direction_animation = 1
+        # Коэффициент скорости анимации
         self.speed = 0.015
 
-        self.current_r = 43
-        self.current_g = 43
-        self.current_b = 43
+        # Переменные для сохранения в классе (чтобы менять в функциях по таймеру)
+        # данных о среднем цвете изображения
+        self.current_r, self.current_g, self.current_b\
+            = background_window_by_time_of_day(self.lb_hi_prog, self.loading_window)
 
-        self.background_window_by_time_of_day()
-
+        # Позиция второй точки градиента (первой с заданным цветом)
         self.gradient_1_pos = 0.4
+        # Позиция третьей точки градиента (второй с заданным цветом)
         self.gradient_2_pos = 0.55
 
+        # переменная для задания стандартной прозрачности точек градиента
+        # (сохранено в классе, чтобы менять в функции по таймеру)
         self.opacity_animation = 0.05
 
+        # Метка индекс смены главного цвета изображения
         self.change_color = 1
+        # Направление смены главного цвета изображения - для анимации
         self.change_color_direction = 1
 
-    def update_animation_gradient(self):
-        """
-        Функция для создания анимации виджету с градиентом на фоне (виджет находится поверх основного фона окна) - плавное смещение градиента и уменьшение его прозрачности.
-        :return: 
-        """""
-
-        r, g, b = self.current_r, self.current_g, self.current_b
-
-        self.base_position_gradient += self.speed * self.direction_animation
-
-        if self.base_position_gradient >= 0.5:
-            self.base_position_gradient = 0.5
-            self.direction_animation = -1
-
-        elif self.base_position_gradient <= 0.0:
-            self.flag_finish_animation = True
-            self.base_position_gradient = 0.0
-
-        pos = self.base_position_gradient
-
-        self.change_color += 0.5 * self.change_color_direction
-
-        if self.change_color >= 40:
-            self.change_color = 40
-            self.change_color_direction = -1
-        elif self.change_color <= 1:
-            self.change_color = 1
-            self.change_color_direction = 1
-
-        index_changed_color = int(self.change_color * 0.5)
-
-        change_red = min(255, r + index_changed_color)
-        change_green = min(255, g + index_changed_color)
-        change_blue = min(255, b + index_changed_color)
-
-        if not self.flag_finish_animation:
-            self.widget_gradient.setStyleSheet(f"""
-                    background: qlineargradient(
-                        x1: 0, y1: 0, x2: 1, y2: 0.5,
-                        stop: 0 rgba({r}, {g}, {b}, 0.0),
-                        stop: {self.gradient_1_pos + pos * 0.3} rgba({r}, {g}, {b}, {self.opacity_animation:.2f}),
-                        stop: {self.gradient_2_pos + pos * 0.3} rgba({change_red * 0.5:.0f}, {change_green * 0.5:.0f}, {change_blue * 0.5:.0f}, {self.opacity_animation * 1:.2f}),
-                        stop: 1 rgba({change_red}, {change_green}, {change_blue}, {self.opacity_animation * 4:.2f})
-                    );
-                    border-radius: 10px;
-                """)
-        else:
-            self.widget_gradient.setStyleSheet(f"""
-                    background: qlineargradient(
-                        x1: 0, y1: 0, x2: 1, y2: 0.5,
-                        stop: 0 rgba({r}, {g}, {b}, 0.0),
-                        stop: {self.gradient_1_pos + pos * 0.3} rgba({r}, {g}, {b}, {self.opacity_animation * 1:.2f}),
-                        stop: {self.gradient_2_pos + pos * 0.3} rgba({change_red * 0.5:.0f}, {change_green * 0.5:.0f}, {change_blue * 0.5:.0f}, {self.opacity_animation * 1:.2f}),
-                        stop: 1 rgba({change_red}, {change_green}, {change_blue}, {self.opacity_animation * 4:.2f})
-                    );
-                    border-radius: 10px;
-                """)
-            if self.opacity_animation <= 0.1:
-                self.opacity_animation += 0.0005
-
-            if (self.gradient_1_pos + pos * 0.6) >= 0.1:
-                self.gradient_1_pos -= 0.005
-                self.gradient_2_pos -= 0.005
-            else:
-                return
-
-    def get_random_image_from_folder(self, folder_path: str) -> str:
-        """
-        Возвращает путь к случайному изображению из указанной папки
-        :param folder_path: путь к папке с изображениями
-        :return: путь к случайному изображению
-        """
-        folder = Path(folder_path)
-
-        if not folder.exists():
-            warning_log(f"[W] Папка не найдена: {folder_path}")
-            return ""
-
-        image_extensions = {'.jpg', '.jpeg', '.png', '.gif'}
-        images = [f for f in folder.iterdir() if f.suffix.lower() in image_extensions]
-
-        if not images:
-            warning_log(f"[W] В папке нет изображений: {folder_path}")
-            return ""
-
-        random_image = random.choice(images)
-        debug_log(f"[I] Выбрано случайное изображение: {random_image.name}")
-
-        return str(random_image)
-
-    def getCitationWithAuthor(self):
-        """
-        Возвращает случайную цитату и её автора вместе
-        """
-
-        citation = random.choice(list(QUOTES.keys()))
-        author = QUOTES[citation]
-        debug_log(f"[I] Цитата: {citation}")
-        debug_log(f"[I] Автор цитаты: {author}")
-        return citation, author
+        self.gradient_timer.timeout.connect(lambda: update_animation_gradient(self))
 
     def update_animation(self):
         """
-        Функция для обновления прогресса прогрессбара
+        Функция для обновления прогресса прогресс-бара
         :return:
         """
 
@@ -365,55 +274,13 @@ class MyLoadingWindow(QWidget):
         """
         Запускает анимацию исчезания и закрытия окна
         """
+
         debug_log("[I] запуск анимации исчезания окна")
+
+        if hasattr(self, 'gradient_timer'):
+            self.gradient_timer.stop()
+
         animationDindisappearanceAndClosing(self, duration=1000)
-
-    def background_window_by_time_of_day(self) -> None:
-        """
-        Функция для смены фона загрузочного окна на то, что соответствует времени суток.
-        :return:
-        """
-
-        current_hour = datetime.now().hour
-        # current_hour = 12 # - отладка и тестирование
-
-        debug_log(f"[I] текущее время {current_hour}")
-
-        debug_log("[I] вывод приветствия в соответствии с текущим времени")
-
-        if 6 <= current_hour < 11:
-            self.lb_hi_prog.setText("Доброе утро!")
-            folder_path = "resources/images/for_start_window/images/morning"
-
-
-        elif 11 <= current_hour < 17:
-            self.lb_hi_prog.setText("Добрый день")
-            folder_path = "resources/images/for_start_window/images/day"
-
-        elif 17 <= current_hour < 21:
-            self.lb_hi_prog.setText("Добрый вечер")
-            folder_path = "resources/images/for_start_window/images/evening"
-
-        else:
-            self.lb_hi_prog.setText("Доброй ночи")
-            folder_path = "resources/images/for_start_window/images/night"
-
-        img_path = self.get_random_image_from_folder(folder_path)
-        path_bg_loading = Path(f'{img_path}')
-        self.loading_window.setStyleSheet(
-            f"background-image: url({path_bg_loading.as_posix()}); border-radius: 10px;")
-
-        # главный цвет изображения
-        main_color = getMainColorImage(img_path)
-        self.lb_hi_prog.setStyleSheet(f"font-weight: bold; color: rgb{main_color}")
-
-        r, g, b = main_color
-
-        # Создаём градиент от цвета изображения к тёмному фону
-        # Сделаю анимацию смещения градиента + небольшое изменение цвета
-        self.current_r = r
-        self.current_b = b
-        self.current_g = g
 
     def mousePressEvent(self, event) -> None:
         """

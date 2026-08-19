@@ -1,8 +1,12 @@
+import time
+from datetime import datetime
 import colorsys
+from pathlib import Path
+import random
 
 from PIL import Image
 
-from utils.output_rich import simple_log, debug_log, log_error
+from utils.output_rich import debug_log, log_error, warning_log
 
 
 def center_window(self) -> None:
@@ -17,6 +21,11 @@ def center_window(self) -> None:
     self.move(qr.topLeft())
 
 def getMainColorImage(image_path: str):
+    """
+    Функция нужна для определения главного цвета изображения на фоне виджета. пока для загрузочного окна
+    :param image_path:
+    :return:
+    """
     try:
         img = Image.open(image_path)
         img = img.resize((1, 1))
@@ -57,3 +66,138 @@ def getMainColorImage(image_path: str):
     except Exception as e:
         log_error(f"[E] Ошибка: {e}")
         return (220, 220, 220)
+
+def get_random_image_from_folder(folder_path: str) -> str:
+    """
+    Возвращает путь к случайному изображению из указанной папки
+    :param folder_path: путь к папке с изображениями
+    :return: путь к случайному изображению
+    """
+    folder = Path(folder_path)
+
+    if not folder.exists():
+        warning_log(f"[W] Папка не найдена: {folder_path}")
+        return ""
+
+    image_extensions = {'.jpg', '.jpeg', '.png', '.gif'}
+    images = [f for f in folder.iterdir() if f.suffix.lower() in image_extensions]
+
+    if not images:
+        warning_log(f"[W] В папке нет изображений: {folder_path}")
+        return ""
+
+    random_image = random.choice(images)
+    debug_log(f"[I] Выбрано случайное изображение: {random_image.name}")
+
+    return str(random_image)
+
+def background_window_by_time_of_day(target_label, target_widget) -> tuple[int, int, int]:
+    """
+    Функция для установления текста лейблу приветствия пользователя (в соответствии с временем) + передача
+    главного цвета атрибуту класса загрузочного окна (именно для атрибутов созданы параметры return_r, return_g и return_b)
+    :param target_label:
+    :param target_widget:
+    :return: None
+    """
+
+    current_hour = datetime.now().hour
+    # current_hour = 12 # - отладка и тестирование
+
+    debug_log(f"[I] текущее время {current_hour}")
+
+    debug_log("[I] вывод приветствия в соответствии с текущим времени")
+
+    if 6 <= current_hour < 11:
+        target_label.setText("Доброе утро!")
+        folder_path = "resources/images/for_start_window/images/morning"
+
+
+    elif 11 <= current_hour < 17:
+        target_label.setText("Добрый день")
+        folder_path = "resources/images/for_start_window/images/day"
+
+    elif 17 <= current_hour < 21:
+        target_label.setText("Добрый вечер")
+        folder_path = "resources/images/for_start_window/images/evening"
+
+    else:
+        target_label.setText("Доброй ночи")
+        folder_path = "resources/images/for_start_window/images/night"
+
+    img_path = get_random_image_from_folder(folder_path)
+    path_bg_loading = Path(f'{img_path}')
+    target_widget.setStyleSheet(
+            f"background-image: url({path_bg_loading.as_posix()}); border-radius: 10px;")
+
+    # главный цвет изображения
+    main_color = getMainColorImage(img_path)
+    target_label.setStyleSheet(f"font-weight: bold; color: rgb{main_color}")
+
+    return main_color
+
+
+def update_animation_gradient(self):
+    """
+    Функция для создания анимации виджету с градиентом на фоне (виджет находится поверх основного фона окна) - плавное смещение градиента и уменьшение его прозрачности.
+    :return: 
+    """""
+
+    r, g, b = self.current_r, self.current_g, self.current_b
+
+    self.base_position_gradient += self.speed * self.direction_animation
+
+    if self.base_position_gradient >= 0.5:
+        self.base_position_gradient = 0.5
+        self.direction_animation = -1
+
+    elif self.base_position_gradient <= 0.0:
+        self.flag_finish_animation = True
+        self.base_position_gradient = 0.0
+
+    pos = self.base_position_gradient
+
+    self.change_color += 0.5 * self.change_color_direction
+
+    if self.change_color >= 40:
+        self.change_color = 40
+        self.change_color_direction = -1
+    elif self.change_color <= 1:
+        self.change_color = 1
+        self.change_color_direction = 1
+
+    index_changed_color = int(self.change_color * 0.5)
+
+    change_red = min(255, r + index_changed_color)
+    change_green = min(255, g + index_changed_color)
+    change_blue = min(255, b + index_changed_color)
+
+    if not self.flag_finish_animation:
+        self.widget_gradient.setStyleSheet(f"""
+                background: qlineargradient(
+                    x1: 0, y1: 0, x2: 1, y2: 0.5,
+                    stop: 0 rgba({r}, {g}, {b}, 0.0),
+                    stop: {self.gradient_1_pos + pos * 0.3} rgba({r}, {g}, {b}, {self.opacity_animation:.2f}),
+                    stop: {self.gradient_2_pos + pos * 0.3} rgba({change_red * 0.5:.0f}, {change_green * 0.5:.0f}, {change_blue * 0.5:.0f}, {self.opacity_animation * 1:.2f}),
+                    stop: 1 rgba({change_red}, {change_green}, {change_blue}, {self.opacity_animation * 4:.2f})
+                );
+                border-radius: 10px;
+            """)
+    else:
+        self.widget_gradient.setStyleSheet(f"""
+                background: qlineargradient(
+                    x1: 0, y1: 0, x2: 1, y2: 0.5,
+                    stop: 0 rgba({r}, {g}, {b}, 0.0),
+                    stop: {self.gradient_1_pos + pos * 0.3} rgba({r}, {g}, {b}, {self.opacity_animation * 1:.2f}),
+                    stop: {self.gradient_2_pos + pos * 0.3} rgba({change_red * 0.5:.0f}, {change_green * 0.5:.0f}, {change_blue * 0.5:.0f}, {self.opacity_animation * 1:.2f}),
+                    stop: 1 rgba({change_red}, {change_green}, {change_blue}, {self.opacity_animation * 4:.2f})
+                );
+                border-radius: 10px;
+            """)
+        if self.opacity_animation <= 0.1:
+            self.opacity_animation += 0.0005
+
+        if (self.gradient_1_pos + pos * 0.6) >= 0.1:
+            self.gradient_1_pos -= 0.005
+            self.gradient_2_pos -= 0.005
+        else:
+            return
