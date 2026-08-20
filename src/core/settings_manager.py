@@ -17,6 +17,8 @@ class SettingsManager:
         self.app_version = "0.3.9"
         self.loading_window_timer_duration = 5000
 
+        self.get_settings()
+
     def write_standard_settings(self):
         with open(self.config_path, "w", encoding="utf-8") as json_file:
             # Стандартные настройки
@@ -77,12 +79,15 @@ class SettingsManager:
             settings_data = self.read_settings()
 
             app_name = settings_data.get("app_name", "Неизвестно")
+            self.app_name = app_name
             simple_log(f"Название приложения: {app_name}")
 
             app_version = settings_data.get('version', 'неизвестно')
+            self.app_version = app_version
             simple_log(f"Версия: {app_version}")
 
             loading_window_timer_duration = settings_data.get("loading_window_timer", "Неизвестно")
+            self.loading_window_timer_duration = loading_window_timer_duration
             simple_log(f"Время работы таймера показа загрузочного окна: {loading_window_timer_duration}")
 
         except json.JSONDecodeError as e:
