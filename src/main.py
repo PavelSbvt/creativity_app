@@ -7,6 +7,7 @@ from PyQt6.QtGui import QIcon
 from gui.loading_start_window import MyLoadingWindow
 from gui.main_window import mainWindow
 from utils.output_rich import enter_log, exit_log
+from core.settings_manager import SettingsManager
 
 
 def main() -> None:
@@ -37,4 +38,6 @@ def main() -> None:
     sys.exit(app.exec())
 
 if __name__ == "__main__":
+    settings_test = SettingsManager()
+    settings_test.get_settings()
     main()
