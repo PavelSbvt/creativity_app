@@ -80,15 +80,12 @@ class SettingsManager:
 
             app_name = settings_data.get("app_name", "Неизвестно")
             self.app_name = app_name
-            simple_log(f"Название приложения: {app_name}")
 
             app_version = settings_data.get('version', 'неизвестно')
             self.app_version = app_version
-            simple_log(f"Версия: {app_version}")
 
             loading_window_timer_duration = settings_data.get("loading_window_timer", "Неизвестно")
             self.loading_window_timer_duration = loading_window_timer_duration
-            simple_log(f"Время работы таймера показа загрузочного окна: {loading_window_timer_duration}")
 
         except json.JSONDecodeError as e:
             warning_log(f"[W] Ошибка открытия json файла с настройками. Текст ошибки: {e}")
@@ -101,6 +98,11 @@ class SettingsManager:
                     self.write_standard_settings()
                 else:
                     self.rewrite_settings()
+
+    def print_settings(self):
+        simple_log(f"Название приложения: {self.app_name}")
+        simple_log(f"Версия: {self.app_version}")
+        simple_log(f"Время работы таймера показа загрузочного окна: {self.loading_window_timer_duration}")
 
     def change_app_name_settings(self, app_name):
         debug_log(f"Имя приложения изменено с {self.app_name} на {app_name}")
