@@ -13,13 +13,17 @@ class SettingsManager:
         self.config_path = Path("config/settings.json")
         self.settings = {}
 
+        self.app_name = "Creativity"
+        self.app_version = "0.3.9"
+        self.loading_window_timer_duration = 5000
+
     def write_standard_settings(self):
         with open(self.config_path, "w", encoding="utf-8") as json_file:
             # Стандартные настройки
             data = {
-                "app_name": "Creativity",
-                "version": "0.3.9",
-                "loading_window_timer": 5000
+                "app_name": self.app_name,
+                "version": self.app_version,
+                "loading_window_timer": self.loading_window_timer_duration
             }
             json.dump(data, json_file, ensure_ascii=False, indent=4)
             debug_log("[I] Применены стандартные настройки")
@@ -41,7 +45,7 @@ class SettingsManager:
         """
 
         if not self.config_path.exists():
-            warning_log(f"[W] Файл не найден: {self.config_path}")
+            warning_log(f"[W] Файл с настройками не найден: {self.config_path}")
             return {}
 
         with open(self.config_path, 'r', encoding='utf-8') as file:
@@ -51,6 +55,13 @@ class SettingsManager:
             success_log("[I] Настройки получены")
             return settings_data
 
+    def rewrite_settings(self):
+        with open(self.config_path, "w", encoding="utf-8") as file:
+            debug_log("[debug] Очистка файла с настройками (перезапись).")
+            file.write("")
+        self.write_standard_settings()
+        debug_log("[debug] Настройки обновлены.")
+
     def get_settings(self):
         """
         Функция для инициализации проверки файла настроек (проверка наличия данных и их заполнение
@@ -58,7 +69,7 @@ class SettingsManager:
         :return:
         """
         if not self.config_path.exists():
-            warning_log(f"[W] Файл не найден: {self.config_path}")
+            warning_log(f"[W] Файл с настройками не найден: {self.config_path}")
             self.write_settings()
             debug_log("Принудительно записаны стандартные настройки")
 
@@ -71,19 +82,40 @@ class SettingsManager:
             app_version = settings_data.get('version', 'неизвестно')
             simple_log(f"Версия: {app_version}")
 
+            loading_window_timer_duration = settings_data.get("loading_window_timer", "Неизвестно")
+            simple_log(f"Время работы таймера показа загрузочного окна: {loading_window_timer_duration}")
+
         except json.JSONDecodeError as e:
-            warning_log(f"[W] Ошибка открытия json файла с настройками: {e}")
+            warning_log(f"[W] Ошибка открытия json файла с настройками. Текст ошибки: {e}")
 
             with open(self.config_path, 'r', encoding='utf-8') as file:
                 content = file.read().strip()
                 if not content:
-                    warning_log("Файл с настройками пуст")
+                    warning_log("[W] Файл с настройками пуст")
 
                     self.write_standard_settings()
                 else:
-                    with open(self.config_path, "w", encoding="utf-8") as file:
-                        file.write("")
-                    self.write_standard_settings()
+                    self.rewrite_settings()
+
+    def change_app_name_settings(self, app_name):
+        debug_log(f"Имя приложения изменено с {self.app_name} на {app_name}")
+        self.app_name = app_name
+        self.rewrite_settings()
+
+    def get_app_name(self):
+        app_name =self.app_name
+        return app_name
+
+    def change_loading_window_timer_duration(self, loading_window_timer_duration):
+        debug_log(f"Время работы таймера загрузочного окна изменено с {self.loading_window_timer_duration} на {loading_window_timer_duration}")
+        self.loading_window_timer_duration = loading_window_timer_duration
+        self.rewrite_settings()
+
+    def get_loading_window_timer_duration(self):
+        loading_window_timer_duration =self.loading_window_timer_duration
+        return loading_window_timer_duration
+
+settings = SettingsManager()
 
 if __name__ == "__main__":
     settings_test = SettingsManager()
