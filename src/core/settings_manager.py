@@ -52,11 +52,11 @@ class SettingsManager:
 
         success_log(f"[I] Файл сохранён: {self.config_path}")
 
-    def read_settings(self) -> None:
+    def read_settings(self) -> dict:
         """
         Читает настройки из JSON-файла
 
-        :return: None.
+        :return: dict.
         """
 
         if not self.config_path.exists():
@@ -194,7 +194,7 @@ class SettingsManager:
         app_name =self.app_name
         return app_name
 
-    def set_loading_window_timer_duration(self, loading_window_timer_duration: int):
+    def set_loading_window_timer_duration(self, loading_window_timer_duration: int) -> None:
         """
         Функция для задания нового значения таймера загрузочного окна приложения.
         Перепишет настройки на новое значение.
@@ -210,7 +210,7 @@ class SettingsManager:
         self.loading_window_timer_duration = loading_window_timer_duration
         self.rewrite_settings()
 
-    def get_loading_window_timer_duration(self):
+    def get_loading_window_timer_duration(self) -> int:
         """
         Функция для получения значения таймера загрузочного окна приложения.
 
@@ -223,7 +223,7 @@ class SettingsManager:
         loading_window_timer_duration =self.loading_window_timer_duration
         return loading_window_timer_duration
 
-    def set_app_version(self, version: str):
+    def set_app_version(self, version: str) -> None:
         """
         Функция для задания параметру версии приложения нового значения.
         Перепишет настройки на новое значение.
@@ -240,7 +240,7 @@ class SettingsManager:
         self.app_version = version
         self.rewrite_settings()
 
-    def get_app_version(self):
+    def get_app_version(self) -> str:
         """
         Функция для получения версии приложения.
 
