@@ -16,6 +16,7 @@ class SettingsManager:
         self.app_name = "Creativity"
         self.app_version = "0.3.9"
         self.loading_window_timer_duration = 5000
+        self.flag_show_loading_window = True
 
         self.get_settings()
 
@@ -31,10 +32,11 @@ class SettingsManager:
             data = {
                 "app_name": self.app_name,
                 "version": self.app_version,
-                "loading_window_timer": self.loading_window_timer_duration
+                "loading_window_timer": self.loading_window_timer_duration,
+                "flag_show_loading_window": self.flag_show_loading_window
             }
             json.dump(data, json_file, ensure_ascii=False, indent=4)
-            debug_log("[I] Применены стандартные настройки")
+            debug_log("Применены стандартные настройки")
 
     def write_settings(self):
         """
@@ -76,10 +78,11 @@ class SettingsManager:
 
         :return: None.
         """
-
+        # Очистка
         with open(self.config_path, "w", encoding="utf-8") as file:
             debug_log("[debug] Очистка файла с настройками (перезапись).")
             file.write("")
+        # Запись
         self.write_standard_settings()
         debug_log("[debug] Настройки обновлены.")
 
@@ -102,14 +105,39 @@ class SettingsManager:
         try:
             settings_data = self.read_settings()
 
+            broken_settings_parameters = []
+
             app_name = settings_data.get("app_name", "Неизвестно")
-            self.app_name = app_name
+            if app_name == "Неизвестно" or not isinstance(app_name, str):
+                broken_settings_parameters.append("app_name")
+            else:
+                self.app_name = app_name
 
             app_version = settings_data.get('version', 'неизвестно')
-            self.app_version = app_version
+            if app_version == "Неизвестно" or not isinstance(app_version, str):
+                broken_settings_parameters.append("app_version")
+            else:
+                self.app_version = app_version
 
             loading_window_timer_duration = settings_data.get("loading_window_timer", "Неизвестно")
-            self.loading_window_timer_duration = loading_window_timer_duration
+            if loading_window_timer_duration == "Неизвестно" or not isinstance(loading_window_timer_duration, int):
+                broken_settings_parameters.append("loading_window_timer_duration")
+            else:
+                self.loading_window_timer_duration = loading_window_timer_duration
+
+
+            flag_show_loading_window = settings_data.get("flag_show_loading_window", "Неизвестно")
+            if flag_show_loading_window == "Неизвестно" or not isinstance(flag_show_loading_window, bool):
+                broken_settings_parameters.append("flag_show_loading_window")
+            else:
+                self.flag_show_loading_window = flag_show_loading_window
+
+            if broken_settings_parameters:
+                warning_log(f"[W] Данные настроек не содержат информацию о {broken_settings_parameters}")
+                debug_log("Перезапись настроек")
+                self.rewrite_settings()
+                debug_log("Повторное получение настроек")
+                return
 
         except json.JSONDecodeError as e:
             warning_log(f"[W] Ошибка открытия json файла с настройками. Текст ошибки: {e}")
@@ -136,6 +164,7 @@ class SettingsManager:
         simple_log(f"Название приложения: {self.app_name}")
         simple_log(f"Версия: {self.app_version}")
         simple_log(f"Время работы таймера показа загрузочного окна: {self.loading_window_timer_duration}")
+        simple_log(f"Показ окна загрузки: {self.flag_show_loading_window}")
 
     def set_app_name_settings(self, app_name: str):
         """
